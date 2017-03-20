@@ -1,0 +1,451 @@
+#ifndef REON_LEXICAL_ANALYZER
+#define REON_LEXICAL_ANALYZER
+
+#include <ctf.h>
+#include <cctype>
+#include <iterator>
+#include <sstream>
+#include <string>
+
+/**
+\brief Recursive descent lexical analyzer
+*/
+class ReonLexer {
+ public:
+  using uint_type = uint64_t;
+
+  std::istream *assignedStream_ = nullptr;
+  std::string buffer_;
+  std::string read_;
+  char c;
+
+  uint_type position_ = 0;
+  uint_type size_ = 0;
+
+  uint_type col_ = 0;
+  uint_type row_ = 0;
+
+  void fill_buffer(std::istream &is) {
+    buffer_ = std::string(std::istreambuf_iterator<char>(is), {});
+    size_ = buffer_.size();
+    position_ = 0;
+    assignedStream_ = &is;
+    col_ = 1;
+    row_ = 1;
+  }
+
+  bool read() {
+    if (size_ == 0 || position_ == size_ - 1)
+      return false;
+
+    c = buffer_[position_++];
+    col_++;
+    if (c == '\n') {
+      col_ = 1;
+      row_++;
+    }
+    return true;
+  }
+
+  void append(const char &a) { read_ += a; }
+
+  void append() { read_ += c; }
+
+  bool read_append() {
+    if (read()) {
+      append();
+      return true;
+    }
+    return false;
+  }
+
+  void roll_back(uint_type i) { position_ -= i; }
+
+  void clear() {
+    read_ = "";
+    c = '\0';
+  }
+
+  string &atr() { return read_; }
+
+  void throw_exception(const string &msg) {
+    throw LexicalError("Lexical error on row " + std::to_string(row_) +
+                       ", col " + std::to_string(col_) + ": " + msg);
+  }
+
+  string s(char cs) { return string{cs}; }
+
+  Token state_init() {
+    clear();
+    do {
+      if (!read())
+        return Symbol::EOI();
+    } while (std::isspace(c));
+    /* : is hadled after string because of special identifiers */
+    switch (c) {
+      case '[':
+      case ']':
+      case '{':
+      case '}':
+      case ',':
+      case ':':
+        return Terminal(s(c));
+      case '"':
+        return state_string();
+      case '-':
+        append();
+        return state_number_minus();
+      case '0':
+        append();
+        return state_number_zero();
+      case 't':
+        return state_true();
+      case 'f':
+        return state_false();
+      case 'n':
+        return state_null();
+      default:
+        if (std::isdigit(c)) {
+          append();
+          return state_number();
+        }
+    }  // switch
+    throw_exception("No token beginning with " + s(c) + ".");
+    // to shut compiler up
+    return Symbol::EOI();
+  }
+
+  Token state_string() {
+    while (1) {
+      if (!read())
+        throw_exception("Unexpected EOF when reading string.");
+      switch (c) {
+        case '"':
+          // may return keywords if there is a : after
+          return state_string_end();
+        case '\\': {
+          if (!read())
+            throw_exception("Unexpected EOF when reading string.");
+          switch (c) {
+            case '"':
+            case '\\':
+            case '/':
+            case 'b':
+            case 'n':
+            case 'r':
+            case 't':
+              append('\\');
+              append();
+              break;
+            case 'u': {  // converts to literal character
+              char temp[5] = {
+                  0,
+              };
+              for (auto i = 0; i < 4; ++i) {
+                if (!read())
+                  throw_exception("Unexpected EOF when reading \\u literal.");
+                if (!isxdigit(c))
+                  throw_exception(
+                      "Non hexa-digit character when reading \\u literal.");
+                temp[i] = c;
+              }  // for
+              int result = std::strtol(temp, nullptr, 16);
+              append(static_cast<char>(result >> 8));
+              append(static_cast<char>(result & 0xFF));
+              break;
+            }  // case 'u'
+            default:
+              throw_exception("Unexpected escaped " + s(c) +
+                              " when reading string.");
+          }  // switch
+        }    // case escape
+        default:
+          append();
+          break;
+      }
+    }  // while 1
+  }
+
+  Token state_string_end() {
+    do {
+      if (!read())
+        return Token{"string", atr()};
+    } while (std::isspace(c));
+
+    // only checking following character, next token begins with it
+    roll_back(1);
+
+    switch (c) {
+      case ':':
+        return check_keywords();
+      default:
+        return Token{"string", {atr()}};
+    }
+  }
+
+  Token state_number_minus() {
+    if (!read_append())
+      throw_exception("Unexpected EOF when reading a number.");
+    switch (c) {
+      case '0':
+        return state_number_zero();
+      default:
+        if (std::isdigit(c)) {
+          return state_number();
+        }
+    }
+    throw_exception("Unexpected " + s(c) + " when reading a number.");
+    // to shut compiler up
+    return Symbol::EOI();
+  }
+
+  /**
+  \brief State after reading '0'.
+  */
+  Token state_number_zero() {
+    if (!read())
+      return Token{"number", atr()};
+    switch (c) {
+      case '.':
+        append();
+        return state_number_dec();
+      default:
+        roll_back(1);
+        return Token{"number", atr()};
+    }
+  }
+
+  /**
+  \brief Reads numbers until a dot or non-digit is read.
+  */
+  Token state_number() {
+    while (1) {
+      if (!read())
+        return Token{"number", atr()};
+      switch (c) {
+        case '.':
+          append();
+          return state_number_dec();
+        case 'e':
+        case 'E':
+          append();
+          return state_number_e();
+        default:
+          if (!std::isdigit(c)) {
+            return Token{"number", atr()};
+          } else {
+            append();
+          }
+      }  // switch
+    }    // while 1
+  }
+
+  Token state_number_dec() {
+    if (!read())
+      throw_exception("Unexpected EOF after decimal dot when reading number.");
+    if (!std::isdigit(c))
+      throw_exception("Unexpected " + s(c) +
+                      " after decimal dot when reading number.");
+    append();
+    while (1) {
+      if (!read())
+        return Token{"number", atr()};
+      switch (c) {
+        case 'e':
+        case 'E':
+          append();
+          return state_number_e();
+        default:
+          if (!std::isdigit(c)) {
+            return Token{"number", atr()};
+          }
+          append();
+      }  // switch
+    }    // while 1
+  }
+
+  Token state_number_e() {
+    if (!read_append())
+      throw_exception("Unexpected EOF after e when reading number.");
+    if (c != '+' && c != '-' && !std::isdigit(c))
+      throw_exception("Unexpected " + s(c) + " after e when reading number.");
+    while (1) {
+      if (!read())
+        return Token{"number", atr()};
+      if (!std::isdigit(c)) {
+        roll_back(1);
+        return Token{"number", atr()};
+      }  // if
+      append();
+    }  // while 1
+  }
+
+  Token state_true() {
+    const static char rue[] = "rue";
+    for (auto i = 0; i < 3; ++i) {
+      if (!read())
+        throw_exception("Unexpected EOF when reading 'true'.");
+      if (c != rue[i]) {
+        throw_exception("Unexpected " + s(c) + " when reading 'true'.");
+      }
+    }
+    return Token{"true"};
+  }
+
+  Token state_false() {
+    const static char alse[] = "alse";
+    for (auto i = 0; i < 4; ++i) {
+      if (!read())
+        throw_exception("Unexpected EOF when reading 'false'.");
+      if (c != alse[i]) {
+        throw_exception("Unexpected " + s(c) + " when reading 'false'.");
+      }
+    }
+    return Token{"false"};
+  }
+
+  Token state_null() {
+    const static char ull[] = "ull";
+    for (auto i = 0; i < 3; ++i) {
+      if (!read())
+        throw_exception("Unexpected EOF when reading null.");
+      if (c != ull[i]) {
+        throw_exception("Unexpected " + s(c) + " when reading 'null'.");
+      }
+    }
+    return Token{"null"};
+  }
+
+  Token check_keywords() {  // TODO: all keywords
+    auto &a = atr();
+    // repetition operators
+    if (!a.compare(0, 7, "repeat ", 0, 7)) {
+      a.erase(0, 7);
+      return keyword_repeat("repeat");
+    }
+    if (!a.compare(0, 9, "ngrepeat ", 0, 9)) {
+      a.erase(0, 9);
+      return keyword_repeat("ngrepeat");
+    }
+    if (a == "set")
+      return Token{"set"};
+    if (a == "nset" || a == "negated set")
+      return Token{"nset"};
+    if (a == "group")
+      return Token{"group"};
+    if (a == "flags")
+      return Token{"flags"};
+    if (a == "agroup" || a == "non-capturing group")
+      return Token{"agroup"};
+    if (!a.compare(0, 5, "flag ", 0, 5)) {
+      a.erase(0, 5);
+      return keyword_flag();
+    }
+    if (!a.compare(0, 6, "group ", 0, 6)) {
+      a.erase(0, 6);
+      return Token{"named group", a};
+    }
+    if (a == "reference")
+      return Token{"reference"};
+    if (a == "comment")
+      return Token{"comment"};
+    if (a == "lookahead")
+      return Token{"lookahead"};
+    if (a == "nlookahead" || a == "negative lookahead")
+      return Token{"nlookahead"};
+    if (a == "lookbehind")
+      return Token{"lookbehind"};
+    if (a == "nlookbehind" || a == "negative lookbehind")
+      return Token{"nlookbehind"};
+    if (a == "if")
+      return Token{"if"};
+    if (a == "then")
+      return Token{"then"};
+    if (a == "else")
+      return Token{"else"};
+    // no match
+    return Token{"string", a};
+  }
+
+  Token keyword_flag() {
+    auto &a = atr();
+    char c = a[0];
+    int phase = 0;
+    int firstUsed = 0, secondUsed = 0;
+    for (uint_type i = 0; i < a.size(); ++i, c = a[i]) {
+      switch (c) {
+        case 'i':
+        case 's':
+        case 'm':
+        case 'x':
+          switch (phase) {
+            case 0:
+              firstUsed++;
+              break;
+            case 1:
+              secondUsed++;
+              break;
+            default:
+              return Token{"string", "flag " + a};
+          }  // switch
+          break;
+        case '-':
+          phase++;
+          break;
+        default:
+          return Token{"string", "flag " + a};
+
+      }  // switch
+    }    // for
+    if (firstUsed >= 4 || (phase == 0 && firstUsed == 0) ||
+        (phase == 1 && (secondUsed == 0 || secondUsed >= 4)))
+      return Token{"string", "flag " + a};
+    return Token{"agroup", a};
+  }
+
+  Token keyword_repeat(const string &token) {
+    // checks attribute
+    enum class State { INIT, FIRST, SECOND, INVALID } state = State::INIT;
+    auto &a = atr();
+    char c = a[0];
+    for (uint_type i = 0; i < a.size(); ++i, c = a[i]) {
+      switch (state) {
+        case State::INIT:
+          if (c == '-') {
+            state = State::SECOND;
+          } else if (!std::isdigit(c)) {
+            state = State::INVALID;
+            break;
+          }
+          state = State::FIRST;
+          break;
+        case State::FIRST:
+          if (c == '-') {
+            state = State::SECOND;
+            break;
+          }
+        case State::SECOND:
+          if (!std::isdigit(c)) {
+            state = State::INVALID;
+            break;
+          }
+        case State::INVALID:
+          break;
+      }  // switch
+    }    // for
+    if (state == State::INVALID)
+      return Token{"string", token + " " + a};
+    if (token == "ngrepeat" && state == State::FIRST)
+      return Token{"repeat", a};
+    return Token{token, a};
+  }
+
+ public:
+  Token operator()(std::istream &is) {
+    if (&is != assignedStream_)
+      fill_buffer(is);
+    return state_init();
+  }
+};
+
+#endif
