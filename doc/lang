@@ -1,36 +1,68 @@
-RE*					-	{ "repeat *" : RE }
-RE+					-	{ "repeat +" : RE }
-RE?					-	{ "repeat ?": RE }
-RE{m}				-	{ "repeat m" : RE }
-RE{m-n}				-	{ "repeat m-n" : RE }
-RE{m-}				-	{ "repeat m-" : RE }
-RE{-n}				-	{ "repeat -n" : RE }
-#non-greedy repetition
-RE*?				-	{ "ngrepeat *" : RE }
-RE+?				-	{ "ngrepeat +" : RE }
-RE??				-	{ "ngrepeat ?" : RE }
-RE{m-n}?			-	{ "ngrepeat m-n" : RE }
-RE{m-}?				-	{ "ngrepeat m-" : RE }
-RE{-n}?				-	{ "ngrepeat -n" : RE }
-[abc]				-	{ "set" : "abc" }
-[^abc]				-	{ "nset" : "abc" }
-A|B|...				-	[ A , B , ... ]
-(RE)				-	{ "group" : RE }
-(?aiLmsux)			-	{ "flags": "aiLmsux" }
-(?:RE)				-	{ "agroup" : RE }
-(?ismx-ismx:RE)		-	{ "flag ismx-ismx" : RE }
-(?P<name>RE)		-	{ "group name" : RE }
-\number				-	{ "reference" : number }
-(?P=name)			-	{ "reference" : "name" }
-(?#X)				-	{ "comment" : "X" }
-(?=RE)				-	{ "lookahead" : RE }
-(?!RE)				-	{ "nlookahead" : RE }
-#FLRE = fixed length RE
-(?<=FLRE)			-	{ "lookbehind" : FLRE }
-(?<!=FLRE)			-	{ "nlookbehind" : FLRE }
-(?(number)REYes)	-	{ "if" : number , "then": REYes }
-(?(id)REYes)	-	{ "if" : "id" , "then": REYes }
+RE*						-	{ "repeat *" : RE }
+RE+						-	{ "repeat +" : RE }
+RE?						-	{ "repeat ?": RE }
+RE{m}					-	{ "repeat m" : RE }
+RE{m-n}					-	{ "repeat m-n" : RE }
+RE{m-}					-	{ "repeat m-" : RE }
+RE{-n}					-	{ "repeat -n" : RE }
+RE*?					-	{ "ngrepeat *" : RE }
+RE+?					-	{ "ngrepeat +" : RE }
+RE??					-	{ "ngrepeat ?" : RE }
+RE{m-n}?				-	{ "ngrepeat m-n" : RE }
+RE{m-}?					-	{ "ngrepeat m-" : RE }
+RE{-n}?					-	{ "ngrepeat -n" : RE }
+[abc]					-	{ "set" : "abc" }
+[^abc]					-	{ "nset" : "abc" }
+A|B|...					-	[ A , B , ... ]
+(RE)					-	{ "group" : RE }
+(?aiLmsux)				-	{ "flags": "aiLmsux" }
+(?:RE)					-	{ "agroup" : RE }
+(?ismx-ismx:RE)			-	{ "flag ismx-ismx" : RE }
+(?P<name>RE)			-	{ "group name" : RE }
+\number					-	{ "reference" : number }
+(?P=name)				-	{ "reference" : "name" }
+(?#X)					-	{ "comment" : "X" }
+(?=RE)					-	{ "lookahead" : RE }
+(?!RE)					-	{ "nlookahead" : RE }
+(?<=FLRE)				-	{ "lookbehind" : FLRE }
+(?<!=FLRE)				-	{ "nlookbehind" : FLRE }
+(?(number)REYes)		-	{ "if" : number , "then": REYes }
+(?(id)REYes)			-	{ "if" : "id" , "then": REYes }
 (?(number)REYes|RENo)	-	{ "if" : number , "then": REYes , "else": RENo }
-(?(id)REYes|RENo)	-	{ "if" : "id" , "then": REYes , "else": RENo }
+(?(id)REYes|RENo)		-	{ "if" : "id" , "then": REYes , "else": RENo }
+
+#Translation grammar
+starting nonterminal: E
+Nonterminal -> REON 						,	python 3 re
+E			->	RE							,	r" RE "
+RE			->								,
+RE			->	REFULL						,	REFULL
+REFULL		->	string						,	string
+REFULL		->	[ RE-listE ]				,	RE-listE
+REFULL		->	{ OBJ }						,	OBJ
+OBJ			->	repeat : RE					,	RE repeat
+OBJ			->	ngrepeat : RE				,	RE repeat ?
+OBJ			->	set : string				,	[ string ]
+OBJ			->	nset : string				,	[^ string ]
+OBJ			->	group : RE					,	( RE )
+OBJ			->	flags : string				,	(? string )
+OBJ			->	agroup : RE					,	(?: RE )
+OBJ			->	flag : RE					,	(? flag : RE )
+OBJ			->	namedgroup : RE				,	(?P< namedgroup > RE ) 
+OBJ			->	reference : Ref				,	Ref
+OBJ			->	comment : string			,	(?# string )
+OBJ			->	lookahead : RE				,	(?= RE )
+OBJ			->	nlookahead : RE				,	(?! RE )
+OBJ			->	lookbehind : RE				,	(?<= RE )
+OBJ			->	nlookbehind : RE			,	(?<! RE )
+OBJ			->	if : Ref , then : RE Then	,	(?( Ref ) RE Then )
+Ref			->	number						,	\ number
+Ref			->	string						,	(?P= string )
+Then		->	, then : RE					,	| RE
+Then		->								,
+RE-listE	->	REFULL RE-list				,	REFULL RE-list
+RE-listE	->								,
+RE-list		->	, REFULL RE-list			,	REFULL	RE-list
+RE-list		->								,
 
 
