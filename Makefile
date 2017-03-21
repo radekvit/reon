@@ -12,7 +12,7 @@ $(shell mkdir -p $(OBJ))
 HEADERS=$(wildcard $(INCLUDE)/*.h)
 OBJFILES=$(patsubst $(SRC)/%.cpp,$(OBJ)/%.o,$(wildcard $(SRC)/*.cpp))
 
-.PHONY: all format clean debug build test pack doc run libbuild
+.PHONY: all format clean debug build test pack doc run libbuild cleanall
 
 all: deploy
 
@@ -20,9 +20,11 @@ build: $(APPNAME)
 
 debug: CXXFLAGS+=-g -O0
 debug: build
+debug: LIBTARGET= debug
 
 deploy: CXXFLAGS+=-O3 -DNDEBUG
 deploy: build
+deploy: LIBTARGET= deploy
 
 $(APPNAME): libbuild
 $(APPNAME): $(OBJFILES)
@@ -33,6 +35,9 @@ libbuild:
 
 $(OBJ)/%.o: $(SRC)/%.cpp $(HEADERS)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+cleanall: clean
+	make -C lib/ clean
 
 clean:
 	-rm -rf $(OBJFILES) $(APPNAME) doc/html

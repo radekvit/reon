@@ -1,7 +1,7 @@
 DIRS = $(wildcard */)
-.PHONY: all libs
+.PHONY: all deploy debug clean
 
-all: libs
+all: deploy
 
-libs:
-	make -C $(foreach dir,$(DIRS),$(dir))
+deploy debug clean:
+	make -C $(foreach dir,$(DIRS),$(dir)) $@
