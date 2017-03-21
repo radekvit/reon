@@ -16,6 +16,6 @@ int main() {
 
   Translation t{la, tc, reonGrammar, og};
   t.run(in, out);
-  
+
   return 0;
 }
