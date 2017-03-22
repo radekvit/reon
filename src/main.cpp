@@ -9,12 +9,10 @@ int main() {
   std::ifstream in("in");
   std::ofstream out("out");
   ReonLexer reonLexer;
-  LexicalAnalyzer la{reonLexer};
-  OutputGenerator og;
 
   LLTranslationControl tc{};
 
-  Translation t{la, tc, reonGrammar, og};
+  Translation t{reonLexer, tc, reonGrammar, OutputGenerator::default_output};
   t.run(in, out);
 
   return 0;
