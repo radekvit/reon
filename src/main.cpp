@@ -8,11 +8,9 @@ using std::cout;
 int main() {
   std::ifstream in("in");
   std::ofstream out("out");
-  ReonLexer reonLexer;
 
-  LLTranslationControl tc{};
-
-  Translation t{reonLexer, tc, reonGrammar, OutputGenerator::default_output};
+  Translation t{ReonLexer{}, "ll", reonGrammar,
+                OutputGenerator::default_output};
   t.run(in, out);
 
   return 0;
