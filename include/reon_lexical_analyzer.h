@@ -331,6 +331,8 @@ class ReonLexer {
       return Token{"set"};
     if (a == "nset" || a == "negated set")
       return Token{"nset"};
+    if (a == "alternatives")
+      return Token{"alternatives"};
     if (a == "group")
       return Token{"group"};
     if (a == "flags")

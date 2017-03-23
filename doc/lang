@@ -13,7 +13,7 @@ RE{m-}?					-	{ "ngrepeat m-" : RE }
 RE{-n}?					-	{ "ngrepeat -n" : RE }
 [abc]					-	{ "set" : "abc" }
 [^abc]					-	{ "nset" : "abc" }
-A|B|...					-	[ A , B , ... ]
+A|B|...					-	{ "alternatives": [ A , B , ... ] }
 (RE)					-	{ "group" : RE }
 (?aiLmsux)				-	{ "flags": "aiLmsux" }
 (?:RE)					-	{ "agroup" : RE }
@@ -44,6 +44,7 @@ OBJ			->	repeat : RE					,	RE repeat
 OBJ			->	ngrepeat : RE				,	RE repeat ?
 OBJ			->	set : string				,	[ string ]
 OBJ			->	nset : string				,	[^ string ]
+OBJ			->	alternatives : [ RE-AlistE ],	RE-AlistE
 OBJ			->	group : RE					,	( RE )
 OBJ			->	flags : string				,	(? string )
 OBJ			->	agroup : RE					,	(?: RE )
@@ -64,5 +65,7 @@ RE-listE	->	REFULL RE-list				,	REFULL RE-list
 RE-listE	->								,
 RE-list		->	, REFULL RE-list			,	REFULL	RE-list
 RE-list		->								,
-
-
+RE-AlistE	->	REFULL RE-AlistE			,	(?: REFULL RE-Alist )
+RE-AlistE	->								,
+RE-Alist	->	, REFULL RE-Alist			,	| REFULL RE-Alist
+RE-Alist	->								,

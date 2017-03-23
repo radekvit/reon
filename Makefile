@@ -31,7 +31,7 @@ $(APPNAME): $(OBJFILES)
 	$(CXX) $(CXXFLAGS) $(OBJFILES) -o $@ $(LDLIBS)
 
 libbuild:
-	make -C lib/
+	make -C lib/ $(LIBTARGET)
 
 $(OBJ)/%.o: $(SRC)/%.cpp $(HEADERS)
 	$(CXX) $(CXXFLAGS) -c $< -o $@

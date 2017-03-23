@@ -19,6 +19,7 @@ const TranslationGrammar reonGrammar{
          {"nset"_t, ":"_t, "string"_t},
          {"[^"_t, "string"_t, "]"_t},
          {{}, {}, {1}}},
+        {"OBJ"_nt, {"alternatives"_t, ":"_t, "["_t, "RE-AlistE"_nt, "]"_t}, {"RE-AlistE"_nt}},
         {"OBJ"_nt, {"group"_t, ":"_t, "RE"_nt}, {"("_t, "RE"_nt, ")"_t}},
         {"OBJ"_nt,
          {"flags"_t, ":"_t, "string"_t},
@@ -59,6 +60,10 @@ const TranslationGrammar reonGrammar{
          {","_t, "REFULL"_nt, "RE-list"_nt},
          {"REFULL"_nt, "RE-list"_nt}},
         {"RE-list"_nt, {}},
+        {"RE-AlistE"_nt, {}},
+        {"RE-AlistE"_nt, {"REFULL"_nt, "RE-Alist"_nt}, {"(?:"_t, "REFULL"_nt, "RE-Alist"_nt, ")"_t}},
+        {"RE-Alist"_nt, {}},
+        {"RE-Alist"_nt, {","_t, "REFULL"_nt, "RE-Alist"_nt},{"|"_t, "REFULL"_nt, "RE-Alist"_nt}},
     },
     // Starting nonterminal
     "E"_nt};
