@@ -1,4 +1,5 @@
 #include <reon_lexical_analyzer.h>
+#include <reon_output_generator.h>
 #include <reon_translation_grammar.h>
 #include <fstream>
 #include <functional>
@@ -7,11 +8,9 @@ using std::cout;
 
 int main() {
   std::ifstream in("in");
-  std::ofstream out("out");
 
-  Translation t{ReonLexer{}, "ll", reonGrammar,
-                OutputGenerator::default_output};
-  t.run(in, out);
+  Translation t{ReonLexer{}, "ll", reonGrammar, ReonOutput()};
+  t.run(in, std::cout);
 
   return 0;
 }

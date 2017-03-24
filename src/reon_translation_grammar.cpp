@@ -1,25 +1,47 @@
 #include <reon_translation_grammar.h>
 
+/*
+Output terminals with meaning:
+        re          -   sequence of characters
+        set         -   set characters
+        ref         -   name reference
+        nref        -   numerical reference
+        comment     -   comment body
+        repeat      -   repeat string: *, {m}, {-n},...
+        flags       -   aiLmsux
+        flag        -   ismx-ismx
+        named group -   group name
+        group       -   group definition for semantic analysis
+*/
+
 const TranslationGrammar reonGrammar{
     // Rules
     {
-        {"E"_nt, {"RE"_nt}, {"r\""_t, "RE"_nt, "\""_t}},
+        {"E"_nt, {"RE"_nt}, {"re = r\""_t, "RE"_nt, "\"\n"_t}},
         {"RE"_nt, {}},
         {"RE"_nt, {"REFULL"_nt}},
-        {"REFULL"_nt, {"string"_t}},
+        {"REFULL"_nt, {"string"_t}, {"re"_t}},
         {"REFULL"_nt, {"["_t, "RE-listE"_nt, "]"_t}, {"RE-listE"_nt}},
         {"REFULL"_nt, {"{"_t, "OBJ"_nt, "}"_t}, {"OBJ"_nt}},
-        {"OBJ"_nt, {"repeat"_t, ":"_t, "RE"_nt}, {"RE"_nt, "repeat"_t}},
-        {"OBJ"_nt, {"ngrepeat"_t, ":"_t, "RE"_nt}, {"RE"_nt, "ngrepeat"_t}},
+        {"OBJ"_nt,
+         {"repeat"_t, ":"_t, "RE"_nt},
+         {"(?:"_t, "RE"_nt, ")"_t, "repeat"_t},
+         {{3}, {}}},
+        {"OBJ"_nt,
+         {"ngrepeat"_t, ":"_t, "RE"_nt},
+         {"(?:"_t, "RE"_nt, "}"_t, "repeat"_t, "?"_t},
+         {{3}, {}}},
         {"OBJ"_nt,
          {"set"_t, ":"_t, "string"_t},
-         {"["_t, "string"_t, "]"_t},
+         {"["_t, "set"_t, "]"_t},
          {{}, {}, {1}}},
         {"OBJ"_nt,
          {"nset"_t, ":"_t, "string"_t},
-         {"[^"_t, "string"_t, "]"_t},
+         {"[^"_t, "set"_t, "]"_t},
          {{}, {}, {1}}},
-        {"OBJ"_nt, {"alternatives"_t, ":"_t, "["_t, "RE-AlistE"_nt, "]"_t}, {"RE-AlistE"_nt}},
+        {"OBJ"_nt,
+         {"alternatives"_t, ":"_t, "["_t, "RE-AlistE"_nt, "]"_t},
+         {"RE-AlistE"_nt}},
         {"OBJ"_nt, {"group"_t, ":"_t, "RE"_nt}, {"("_t, "RE"_nt, ")"_t}},
         {"OBJ"_nt,
          {"flags"_t, ":"_t, "string"_t},
@@ -50,20 +72,26 @@ const TranslationGrammar reonGrammar{
         {"OBJ"_nt,
          {"if"_t, ":"_t, "Ref"_nt, ","_t, "then"_t, ":"_t, "RE"_nt, "Then"_nt},
          {"(?("_t, "Ref"_nt, ")"_t, "RE"_nt, "Then"_nt, ")"_t}},
-        {"Ref"_nt, {"number"_t}, {"\\"_t, "number"_t}, {{1}}},
-        {"Ref"_nt, {"string"_t}, {"(?P="_t, "string"_t}, {{1}}},
+        {"Ref"_nt, {"number"_t}, {"\\"_t, "nref"_t}, {{1}}},
+        {"Ref"_nt, {"string"_t}, {"(?P="_t, "ref"_t}, {{1}}},
         {"Then"_nt, {","_t, "then"_t, ":"_t, "RE"_nt}, {"|"_t, "RE"_nt}},
         {"Then"_nt, {}},
         {"RE-listE"_nt, {"REFULL"_nt, "RE-list"_nt}},
         {"RE-listE"_nt, {}},
-        {"RE-list"_nt,
-         {","_t, "REFULL"_nt, "RE-list"_nt},
-         {"REFULL"_nt, "RE-list"_nt}},
+        {"RE-list"_nt, {","_t, "RE-list-comma"_nt}, {"RE-list-comma"_nt}},
+        {"RE-list-comma"_nt, {}},
+        {"RE-list-comma"_nt, {"REFULL"_nt, "RE-list"_nt}},
         {"RE-list"_nt, {}},
         {"RE-AlistE"_nt, {}},
-        {"RE-AlistE"_nt, {"REFULL"_nt, "RE-Alist"_nt}, {"(?:"_t, "REFULL"_nt, "RE-Alist"_nt, ")"_t}},
+        {"RE-AlistE"_nt,
+         {"REFULL"_nt, "RE-Alist"_nt},
+         {"(?:"_t, "REFULL"_nt, "RE-Alist"_nt, ")"_t}},
         {"RE-Alist"_nt, {}},
-        {"RE-Alist"_nt, {","_t, "REFULL"_nt, "RE-Alist"_nt},{"|"_t, "REFULL"_nt, "RE-Alist"_nt}},
+        {"RE-Alist"_nt, {","_t, "RE-Alist-comma"_nt}, {"RE-Alist-comma"_nt}},
+        {"RE-Alist-comma"_nt, {}},
+        {"RE-Alist-comma"_nt,
+         {"REFULL"_nt, "RE-Alist"_nt},
+         {"|"_t, "REFULL"_nt, "RE-Alist"_nt}},
     },
     // Starting nonterminal
     "E"_nt};

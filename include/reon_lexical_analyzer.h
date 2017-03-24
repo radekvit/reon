@@ -12,7 +12,7 @@
 */
 class ReonLexer {
  public:
-  using uint_type = uint64_t;
+  using uint_type = size_t;
 
   std::istream *assignedStream_ = nullptr;
   std::string buffer_;
@@ -127,6 +127,7 @@ class ReonLexer {
           if (!read())
             throw_exception("Unexpected EOF when reading string.");
           switch (c) {
+            /* Allow all characters to be escaped
             case '"':
             case '\\':
             case '/':
@@ -137,6 +138,7 @@ class ReonLexer {
               append('\\');
               append();
               break;
+            */
             case 'u': {  // converts to literal character
               char temp[5] = {
                   0,
@@ -155,10 +157,11 @@ class ReonLexer {
               break;
             }  // case 'u'
             default:
-              throw_exception("Unexpected escaped " + s(c) +
-                              " when reading string.");
+              append('\\');
+              append();
           }  // switch
-        }    // case escape
+          break;
+        }  // case escape
         default:
           append();
           break;
@@ -409,6 +412,8 @@ class ReonLexer {
     // checks attribute
     enum class State { INIT, FIRST, SECOND, INVALID } state = State::INIT;
     auto &a = atr();
+    if (a == "*" || a == "+" || a == "?")
+      return Token{token, a};
     char c = a[0];
     for (uint_type i = 0; i < a.size(); ++i, c = a[i]) {
       switch (state) {
