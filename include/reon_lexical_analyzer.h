@@ -35,7 +35,7 @@ class ReonLexer {
   }
 
   bool read() {
-    if (size_ == 0 || position_ == size_ - 1)
+    if (position_ == size_)
       return false;
 
     c = buffer_[position_++];
@@ -235,6 +235,7 @@ class ReonLexer {
           return state_number_e();
         default:
           if (!std::isdigit(c)) {
+            roll_back(1);
             return Token{"number", atr()};
           } else {
             append();
@@ -260,6 +261,7 @@ class ReonLexer {
           return state_number_e();
         default:
           if (!std::isdigit(c)) {
+            roll_back(1);
             return Token{"number", atr()};
           }
           append();

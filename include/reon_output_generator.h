@@ -30,6 +30,8 @@ class ReonOutput {
   std::set<string> knownGroups_{};
   uint_type numberGroups_ = 0;
 
+  vector<std::function<void(const Symbol &)>> semanticChecks_{};
+
   const std::map<string, std::function<void(std::ostream &, const Symbol &)>>
       symbolMap_{
           {"re", std::bind(&ReonOutput::re, this, std::placeholders::_1,
@@ -53,11 +55,37 @@ class ReonOutput {
                      std::placeholders::_2)},
           {"group", std::bind(&ReonOutput::group, this, std::placeholders::_1,
                               std::placeholders::_2)},
+          {"fixed_length_check", std::bind(&ReonOutput::add_fixed_length_check, this, std::placeholders::_1, std::placeholders::_2)},
+          {"end_check", std::bind(&ReonOutput::end_check, this, std::placeholders::_1, std::placeholders::_2)},
       };
 
   void clear_all() {
-    knownGroups_ = {};
+    knownGroups_.clear();
     numberGroups_ = 0;
+
+    semanticChecks_.clear();
+  }
+
+  void fixed_length_check(const Symbol &symbol) {
+    if(symbol.name() == "repeat") {
+      //must be a constant length
+      for(char c: symbol.attribute()) {
+        if(!std::isdigit(c))
+          throw SemanticError("RE of non-constant length within a lookbehind assertion.");
+      }
+    }
+    else if (symbol.name() == "ref" || symbol.name() == "nref")
+    {
+      throw SemanticError("REON currently does not support group references within lookbehind assertions.");
+    }
+  }
+
+  void add_fixed_length_check(std::ostream &, const Symbol &) {
+    semanticChecks_.push_back(std::bind(&ReonOutput::fixed_length_check, this, std::placeholders::_1));
+  }
+
+  void end_check(std::ostream &, const Symbol &) {
+    semanticChecks_.pop_back();
   }
 
   void re(std::ostream &out, const Symbol &s) {
@@ -164,8 +192,8 @@ class ReonOutput {
     if (*endptr != '\0' || x < 1)
       throw SemanticError(
           "Only positive integers are permitted as references.");
-    if (static_cast<uint_type>(x) >= numberGroups_)
-      throw SemanticError("");
+    if (static_cast<uint_type>(x) > numberGroups_)
+      throw SemanticError("No group with number " + s.attribute() + ".");
 
     out << s.attribute();
   }
@@ -270,6 +298,9 @@ class ReonOutput {
     if (s == Symbol::EOI()) {
       clear_all();
       return;
+    }
+    for(auto check: semanticChecks_) {
+      check(s);
     }
     // runs name specific method
     auto it = symbolMap_.find(s.name());
