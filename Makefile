@@ -2,14 +2,14 @@ APPNAME=reon
 INCLUDE=include
 LIBDIR = lib/ctf
 LIBINCLUDE = $(LIBDIR)/include
-LIBFILES = $(LIBDIR)/libctf.so
+$LIBSRC = $(LIBDIR)/src
 SRC=src
 CXXFLAGS += -std=c++14 -Wall -Wextra -pedantic -I. -I $(INCLUDE) -I $(LIBINCLUDE)
-LDLIBS = -Llib/ctf -lctf
 OBJ=obj
 $(shell mkdir -p $(OBJ))
 
 HEADERS=$(wildcard $(INCLUDE)/*.h)
+LIBHEADERS=$(wildcard $(LIBSRC)/*.h)
 OBJFILES=$(patsubst $(SRC)/%.cpp,$(OBJ)/%.o,$(wildcard $(SRC)/*.cpp))
 
 .PHONY: all format clean debug build test pack doc run libbuild cleanall
@@ -20,24 +20,15 @@ build: $(APPNAME)
 
 debug: CXXFLAGS+=-g -O0
 debug: build
-debug: LIBTARGET= debug
 
 deploy: CXXFLAGS+=-O3 -DNDEBUG
 deploy: build
-deploy: LIBTARGET= deploy
 
-$(APPNAME): libbuild
 $(APPNAME): $(OBJFILES)
 	$(CXX) $(CXXFLAGS) $(OBJFILES) -o $@ $(LDLIBS)
 
-libbuild:
-	make -C lib/ $(LIBTARGET)
-
-$(OBJ)/%.o: $(SRC)/%.cpp $(HEADERS)
+$(OBJ)/%.o: $(SRC)/%.cpp $(HEADERS) $(LIBHEADERS)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
-
-cleanall: clean
-	make -C lib/ clean
 
 clean:
 	-rm -rf $(OBJFILES) $(APPNAME) doc/html
