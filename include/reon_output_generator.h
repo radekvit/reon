@@ -55,8 +55,12 @@ class ReonOutput {
                      std::placeholders::_2)},
           {"group", std::bind(&ReonOutput::group, this, std::placeholders::_1,
                               std::placeholders::_2)},
-          {"fixed_length_check", std::bind(&ReonOutput::add_fixed_length_check, this, std::placeholders::_1, std::placeholders::_2)},
-          {"end_check", std::bind(&ReonOutput::end_check, this, std::placeholders::_1, std::placeholders::_2)},
+          {"fixed_length_check",
+           std::bind(&ReonOutput::add_fixed_length_check, this,
+                     std::placeholders::_1, std::placeholders::_2)},
+          {"end_check",
+           std::bind(&ReonOutput::end_check, this, std::placeholders::_1,
+                     std::placeholders::_2)},
       };
 
   void clear_all() {
@@ -67,79 +71,99 @@ class ReonOutput {
   }
 
   void fixed_length_check(const Symbol &symbol) {
-    if(symbol.name() == "repeat") {
-      //must be a constant length
-      for(char c: symbol.attribute()) {
-        if(!std::isdigit(c))
-          throw SemanticError("RE of non-constant length within a lookbehind assertion.");
+    if (symbol.name() == "repeat") {
+      // must be a constant length
+      for (char c : symbol.attribute()) {
+        if (!std::isdigit(c))
+          throw SemanticError(
+              "RE of non-constant length within a lookbehind assertion.");
       }
-    }
-    else if (symbol.name() == "ref" || symbol.name() == "nref")
-    {
-      throw SemanticError("REON currently does not support group references within lookbehind assertions.");
+    } else if (symbol.name() == "ref" || symbol.name() == "nref") {
+      throw SemanticError(
+          "REON currently does not support group references within lookbehind "
+          "assertions.");
     }
   }
 
   void add_fixed_length_check(std::ostream &, const Symbol &) {
-    semanticChecks_.push_back(std::bind(&ReonOutput::fixed_length_check, this, std::placeholders::_1));
+    semanticChecks_.push_back(std::bind(&ReonOutput::fixed_length_check, this,
+                                        std::placeholders::_1));
   }
 
-  void end_check(std::ostream &, const Symbol &) {
-    semanticChecks_.pop_back();
-  }
+  void end_check(std::ostream &, const Symbol &) { semanticChecks_.pop_back(); }
 
   void re(std::ostream &out, const Symbol &s) {
     bool lastEscaped = false;
     for (char c : s.attribute()) {
-      switch (c) {
-        case '*':
-        case '+':
-        case '?':
-        case '{':
-        case '}':
-        case '[':
-        case ']':
-        case '|':
-        case '(':
-        case ')':
-          out << '\\' << c;
-          break;
-        default:
-          if (lastEscaped && std::isdigit(c)) {
-            out << '\\';
-          }
-          if (lastEscaped && std::isalpha(c)) {
-            switch (c) {
-              case 'A':
-              case 'b':
-              case 'B':
-              case 'd':
-              case 'D':
-              case 'f':
-              case 'n':
-              case 'r':
-              case 's':
-              case 'S':
-              case 't':
-              case 'u':
-              case 'U':
-              case 'v':
-              case 'w':
-              case 'W':
-              case 'x':
-              case 'Z':
-                break;
-              default:
-                throw SemanticError("Unknown escaped sequence \\" + string{c} +
-                                    ".");
-            }
-          }
-          out << c;
-      }
-      if (c == '\\')
-        lastEscaped = true;
-      else
+      /* regular character output */
+      if (!lastEscaped) {
+        switch (c) {
+          case '*':
+          case '+':
+          case '?':
+          case '{':
+          case '}':
+          case '[':
+          case ']':
+          case '|':
+          case '(':
+          case ')':
+          case '$':
+          case '^':
+          case '.':
+            out << '\\' << c;
+            break;
+          case '\\':
+            lastEscaped = true;
+            break;
+          default:
+            out << c;
+            break;
+        }
+        /* escaped character output */
+      } else {
         lastEscaped = false;
+        if (std::isdigit(c)) {
+          throw SemanticError(
+              "Numbers cannot be escaped in string. To reference a group, an "
+              "explicit reference must be used.");
+        }
+        if (std::isalpha(c)) {
+          switch (c) {
+            case 'A':
+            case 'b':
+            case 'B':
+            case 'd':
+            case 'D':
+            case 'f':
+            case 'n':
+            case 'r':
+            case 's':
+            case 'S':
+            case 't':
+            case 'u':
+            case 'U':
+            case 'v':
+            case 'w':
+            case 'W':
+            case 'x':
+            case 'Z':
+              out << '\\';
+              break;
+            default:
+              throw SemanticError("Unknown escaped sequence \\" + string{c} +
+                                  ".");
+          }
+        }
+        if (c != '.' && c != '^' && c != '$' && c != '\\') {
+          throw SemanticError(
+              "Character " + string{c} +
+              " cannot be escaped in a string character sequence.");
+        }
+        if (c == '\\')
+          out << '\\';
+        out << c;
+      }
     }
   }
   void set(std::ostream &out, const Symbol &s) {
@@ -299,7 +323,7 @@ class ReonOutput {
       clear_all();
       return;
     }
-    for(auto check: semanticChecks_) {
+    for (auto check : semanticChecks_) {
       check(s);
     }
     // runs name specific method
