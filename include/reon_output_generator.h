@@ -1,3 +1,8 @@
+/**
+\file reon_output_generator.h
+\brief Implements output generation and semantic analysis for reon.
+\author Radek Vít
+*/
 #ifndef REON_OUTPUT_GENERATOR
 #define REON_OUTPUT_GENERATOR
 
@@ -21,17 +26,32 @@ Output terminals with meaning:
         named group -   group name
         group       -   group definition for semantic analysis
 */
-
+/**
+\brief Callable class for reon output generation and semantic checks.
+*/
 class ReonOutput {
  public:
   using uint_type = size_t;
 
  protected:
+  /**
+  \brief Set of known group names.
+  */
   std::set<string> knownGroups_{};
+  /**
+  \brief Ammount of groups defined thus far.
+  */
   uint_type numberGroups_ = 0;
 
+  /**
+  \brief Vector of semantic checks callbacks.
+  */
   vector<std::function<void(const Symbol &)>> semanticChecks_{};
 
+  /**
+  \brief Substitute for a string switch statement for invoking methods
+  appropriate for incoming symbols.
+  */
   const std::map<string, std::function<void(std::ostream &, const Symbol &)>>
       symbolMap_{
           {"re", std::bind(&ReonOutput::re, this, std::placeholders::_1,
@@ -63,6 +83,9 @@ class ReonOutput {
                      std::placeholders::_2)},
       };
 
+  /**
+  \brief Resets the output generator.
+  */
   void clear_all() {
     knownGroups_.clear();
     numberGroups_ = 0;
@@ -70,6 +93,9 @@ class ReonOutput {
     semanticChecks_.clear();
   }
 
+  /**
+  \brief Semantic check; checks if this part of the RE has fixed length.
+  */
   void fixed_length_check(const Symbol &symbol) {
     if (symbol.name() == "repeat") {
       // must be a constant length
@@ -85,13 +111,24 @@ class ReonOutput {
     }
   }
 
+  /**
+  \brief Adds fixed_length_check to semantic checks.
+  */
   void add_fixed_length_check(std::ostream &, const Symbol &) {
     semanticChecks_.push_back(std::bind(&ReonOutput::fixed_length_check, this,
                                         std::placeholders::_1));
   }
 
+  /**
+  \brief Pops the stack of semantic checks.
+  */
   void end_check(std::ostream &, const Symbol &) { semanticChecks_.pop_back(); }
 
+  /**
+  \brief Outputs a 're' terminal. Escapes all appropriate characters, unescapes
+  ., $, ^.
+  Checks escapes for validity.
+  */
   void re(std::ostream &out, const Symbol &s) {
     bool lastEscaped = false;
     for (char c : s.attribute()) {
@@ -166,6 +203,11 @@ class ReonOutput {
       }
     }
   }
+
+  /**
+  \brief Outputs 'set' terminal. Escapes appropriate characters. Checks
+  character ranges.
+  */
   void set(std::ostream &out, const Symbol &s) {
     string finalSet;
     bool escape = false;
@@ -204,12 +246,19 @@ class ReonOutput {
       finalSet += "-";
     out << finalSet;
   }
+
+  /**
+  \brief Outputs a 'ref' terminal. Checks if a group with this name exists.
+  */
   void ref(std::ostream &out, const Symbol &s) {
     if (knownGroups_.count(s.attribute()) == 0)
       throw SemanticError("No group named " + s.attribute() +
                           " is known at this point.");
     out << s.attribute();
   }
+  /**
+  \brief Outputs a 'nref' terminal. Checks if a group with this number exists.
+  */
   void nref(std::ostream &out, const Symbol &s) {
     char *endptr;
     long x = std::strtol(s.attribute().c_str(), &endptr, 10);
@@ -221,6 +270,9 @@ class ReonOutput {
 
     out << s.attribute();
   }
+  /**
+  \brief Outputs a comment. Escapes ')'.
+  */
   void comment(std::ostream &out, const Symbol &s) {
     for (char c : s.attribute()) {
       if (c == ')')
@@ -228,6 +280,9 @@ class ReonOutput {
       out << c;
     }
   }
+  /**
+  \brief Outputs a 'repeat' terminal. Checks the repetition validity.
+  */
   void repeat(std::ostream &out, const Symbol &s) {
     // most of validity is assured by lexical analysis
     // check if m is larger than n
@@ -261,21 +316,26 @@ class ReonOutput {
     out << s.attribute();
     out << "}";
   }
-
+  /**
+  \brief Outputs the 'flags' terminal. Checks if the flags given are available.
+  */
   void flags(std::ostream &out, const Symbol &s) {
     std::set<char> used{};
-    std::set<char> available{'a', 'i', 'L', 'm', 's', 'u', 'x'};
+    static const std::set<char> available{'a', 'i', 'L', 'm', 's', 'u', 'x'};
     for (char c : s.attribute()) {
       auto it = available.find(c);
       if (it == available.end())
         throw SemanticError("Unknown flag " + string{c} +
                             "in 'flags' sequence.");
-      available.erase(it);
-      used.insert(c);
-      out << c;
+      if (used.find(c) == used.end()) {
+        out << c;
+        used.insert(c);
+      }
     }
   }
-
+  /**
+  \brief Outputs the 'flag' terminal. Checks the flag sequence validity.
+  */
   void flag(std::ostream &out, const Symbol &s) {
     std::set<char> used{};
     std::set<char> available{'i', 's', 'm', 'x', '-'};
@@ -289,7 +349,10 @@ class ReonOutput {
       out << c;
     }
   }
-
+  /**
+  \brief Outputs the 'named_group' terminal. Validates the group's name. Adds
+  the group name to the set of known group names.
+  */
   void named_group(std::ostream &out, const Symbol &s) {
     numberGroups_++;
     // checking validity of identifier
@@ -307,17 +370,32 @@ class ReonOutput {
                             string{first} + ".");
     }
     out << s.attribute();
+    if (knownGroups_.find(s.attribute()) != knownGroups_.end()) {
+      throw SemanticError("Multiple definitions of a group with name " +
+                          s.attribute() + ".");
+    }
     knownGroups_.insert(s.attribute());
   }
-
+  /**
+  \brief Marks the presence of a group.
+  */
   void group(std::ostream &, const Symbol &) { numberGroups_++; }
 
+  /**
+  \brief Outputs a terminal's name.
+  */
   void symbol(std::ostream &out, const Symbol &s) {
     // unknown; putting name to output
     out << s.name();
   }
 
  public:
+  /**
+  \brief Outputs the incoming symbol. Resets on receiving Symbol::EOI().
+  Performs semantic checks.
+  \param[out] out Output stream.
+  \param[in] s Incoming symbol.
+  */
   void operator()(std::ostream &out, const Symbol &s) {
     if (s == Symbol::EOI()) {
       clear_all();
@@ -335,3 +413,4 @@ class ReonOutput {
 };
 
 #endif
+/*** End of file reon_output_generator.h ***/

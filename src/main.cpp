@@ -35,25 +35,25 @@ int main(int argc, char **argv) {
   try {
     run_with_arguments(argc, argv);
   } catch (LexicalError &le) {
-    cerr << "Lexical Error: " << le.what() << "\n";
+    cerr << "\nLexical Error: " << le.what() << "\n";
     return LEXICAL_ERROR;
   } catch (SyntaxError &se) {
-    cerr << "Syntax Error: " << se.what() << "\n";
+    cerr << "\nSyntax Error: " << se.what() << "\n";
     return SYNTAX_ERROR;
   } catch (SemanticError &se) {
-    cerr << "Semantic Error: " << se.what() << "\n";
+    cerr << "\nSemantic Error: " << se.what() << "\n";
     return SEMANTIC_ERROR;
   } catch (TranslationException &te) {
-    cerr << "Translation Error: " << te.what() << "\n";
+    cerr << "\nTranslation Error: " << te.what() << "\n";
     return TRANSLATION_ENGINE_ERROR;
   } catch (std::invalid_argument &ia) {
-    cerr << "Invalid argument: " << ia.what() << "\n";
+    cerr << "\nInvalid argument: " << ia.what() << "\n";
     return INVALID_ARGUMENT;
   } catch (std::exception &e) {
-    cerr << "Runtime Error: " << e.what() << "\n";
+    cerr << "\nRuntime Error: " << e.what() << "\n";
     return RUNTIME_ERROR;
   } catch (...) {
-    cerr << "An unknown exception was thrown.\n";
+    cerr << "\nAn unknown exception was thrown.\n";
     return UNKNOWN_EXCEPTION;
   }
   return 0;

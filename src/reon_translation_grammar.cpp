@@ -1,3 +1,8 @@
+/**
+\file reon_translation_grammar.cpp
+\brief Defines reonGrammar.
+\author Radek Vít
+*/
 #include <reon_translation_grammar.h>
 
 /*
@@ -14,13 +19,18 @@ Output terminals with meaning:
         group       -   group definition for semantic analysis
 */
 
+/**
+\brief Defines the translation from reon to Python 3 RE.
+
+This is an LL grammar for the input.
+*/
 const TranslationGrammar reonGrammar{
     // Rules
     {
         {"E"_nt, {"RE"_nt}, {"re = r\""_t, "RE"_nt, "\"\n"_t}},
         {"RE"_nt, {}},
         {"RE"_nt, {"REFULL"_nt}},
-        {"REFULL"_nt, {"string"_t}, {"re"_t}},
+        {"REFULL"_nt, {"string"_t}, {"re"_t}, {{0}}},
         {"REFULL"_nt, {"["_t, "RE-listE"_nt, "]"_t}, {"RE-listE"_nt}},
         {"REFULL"_nt, {"{"_t, "OBJ"_nt, "}"_t}, {"OBJ"_nt}},
         {"OBJ"_nt,
@@ -100,3 +110,5 @@ const TranslationGrammar reonGrammar{
     },
     // Starting nonterminal
     "E"_nt};
+
+/*** End of file reon_translation_grammar.cpp ***/

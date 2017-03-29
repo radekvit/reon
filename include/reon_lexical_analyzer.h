@@ -1,3 +1,8 @@
+/**
+\file reon_lexical_analyzer.h
+\brief Implements a lexical analyzer for reon.
+\author Radek Vít
+*/
 #ifndef REON_LEXICAL_ANALYZER
 #define REON_LEXICAL_ANALYZER
 
@@ -8,23 +13,56 @@
 #include <string>
 
 /**
-\brief Recursive descent lexical analyzer
+\brief Recursive descent lexical analyzer for reon. Callable class.
+
+Buffers all of the stream input. Resets on input stream change and on returning
+Symbol::EOI.
 */
 class ReonLexer {
  public:
   using uint_type = size_t;
 
+  /**
+  \brief Stream that is read from.
+  */
   std::istream *assignedStream_ = nullptr;
+  /**
+  \brief Buffer containing all characters from the stream.
+  */
   std::string buffer_;
+  /**
+  \brief Attribute string.
+  */
   std::string read_;
+  /**
+  \brief Currently read character.
+  */
   char c;
 
+  /**
+  \brief Current read position.
+  */
   uint_type position_ = 0;
+  /**
+  \brief Number of characters in buffer.
+  */
   uint_type size_ = 0;
 
-  uint_type col_ = 0;
-  uint_type row_ = 0;
+  /**
+  \brief Column of current read position.
+  */
+  uint_type col_ = 1;
+  /**
+  \brief Row of current read position.
+  */
+  uint_type row_ = 1;
 
+  /**
+  \brief Assigns a stream and fills the buffer from it.
+  \param[in] is Input stream for assignment.
+
+  Sets new buffer size, resets read position, col and row positions.
+  */
   void fill_buffer(std::istream &is) {
     buffer_ = std::string(std::istreambuf_iterator<char>(is), {});
     size_ = buffer_.size();
@@ -34,6 +72,10 @@ class ReonLexer {
     row_ = 1;
   }
 
+  /**
+  \brief Reads the next character into c. Adjusts positions.
+  \returns False if EOF is encountered, true otherwise.
+  */
   bool read() {
     if (position_ == size_)
       return false;
@@ -47,10 +89,21 @@ class ReonLexer {
     return true;
   }
 
+  /**
+  \brief Appends char to attribute string.
+  \param[in] a Character to append.
+  */
   void append(const char &a) { read_ += a; }
 
+  /**
+  \brief Appends c to attribute string.
+  */
   void append() { read_ += c; }
 
+  /**
+  \brief Reads and appends character to attribute string.
+  \returns False if EOF is encountered. True otherwise.
+  */
   bool read_append() {
     if (read()) {
       append();
@@ -59,27 +112,64 @@ class ReonLexer {
     return false;
   }
 
+  /**
+  \brief Moves reading position back.
+  \param[in] i How many characters to roll back.
+  */
   void roll_back(uint_type i) { position_ -= i; }
 
+  /**
+  \brief Clears attribute string and c before reading new token.
+  */
   void clear() {
     read_ = "";
     c = '\0';
   }
 
+  /**
+  \brief Returns current attribute string.
+  \returns Current attribute string.
+  */
   string &atr() { return read_; }
 
+  /**
+  \brief Resets analyzer. After assigning a stream, it acts as if it was just
+  constructed.
+  */
+  void reset() { assignedStream_ = nullptr; }
+
+  /**
+  \brief Returns Symbol::EOI(), resets lexical analyzer.
+  \returns Symbol::EOI().
+  */
+  Symbol EOI() {
+    reset();
+    return Symbol::EOI();
+  }
+
+  /**
+  \brief Throws exception with given message and adds row and col information.
+  */
   void throw_exception(const string &msg) {
     throw LexicalError("Lexical error on row " + std::to_string(row_) +
                        ", col " + std::to_string(col_) + ": " + msg);
   }
 
+  /**
+  \brief Converts a char to a string.
+  */
   string s(char cs) { return string{cs}; }
 
+  /**
+  \brief Initial state. Clears attribute string and acts according to first read
+  character.
+  \returns Appropriate Token.
+  */
   Token state_init() {
     clear();
     do {
       if (!read())
-        return Symbol::EOI();
+        return EOI();
     } while (std::isspace(c));
     /* : is hadled after string because of special identifiers */
     switch (c) {
@@ -115,6 +205,10 @@ class ReonLexer {
     return Symbol::EOI();
   }
 
+  /**
+  \brief Reading string contents. Resolves escapes.
+  \returns Token string or one of the keyword tokens.
+  */
   Token state_string() {
     while (1) {
       if (!read())
@@ -152,7 +246,8 @@ class ReonLexer {
                 temp[i] = c;
               }  // for
               int result = std::strtol(temp, nullptr, 16);
-              append(static_cast<char>(result >> 8));
+              if (result > 0xFF)
+                append(static_cast<char>(result >> 8));
               append(static_cast<char>(result & 0xFF));
               break;
             }  // case 'u'
@@ -169,6 +264,11 @@ class ReonLexer {
     }  // while 1
   }
 
+  /**
+  \brief Checks whether a ':' follows the read string. If it does, it checks for
+  keywords.
+  \returns Token string or keyword token.
+  */
   Token state_string_end() {
     do {
       if (!read())
@@ -186,6 +286,10 @@ class ReonLexer {
     }
   }
 
+  /**
+  \brief Reading number after '-'.
+  \returns Token number.
+  */
   Token state_number_minus() {
     if (!read_append())
       throw_exception("Unexpected EOF when reading a number.");
@@ -203,7 +307,8 @@ class ReonLexer {
   }
 
   /**
-  \brief State after reading '0'.
+  \brief Reading after initial '0'.
+  \returns Token number.
   */
   Token state_number_zero() {
     if (!read())
@@ -220,6 +325,7 @@ class ReonLexer {
 
   /**
   \brief Reads numbers until a dot or non-digit is read.
+  \returns Token number.
   */
   Token state_number() {
     while (1) {
@@ -244,6 +350,10 @@ class ReonLexer {
     }    // while 1
   }
 
+  /**
+  \brief Reading number after decimal dot.
+  \returns Token number.
+  */
   Token state_number_dec() {
     if (!read())
       throw_exception("Unexpected EOF after decimal dot when reading number.");
@@ -269,6 +379,10 @@ class ReonLexer {
     }    // while 1
   }
 
+  /**
+  \brief Reading number after 'e'
+  \returns Token number.
+  */
   Token state_number_e() {
     if (!read_append())
       throw_exception("Unexpected EOF after e when reading number.");
@@ -285,6 +399,10 @@ class ReonLexer {
     }  // while 1
   }
 
+  /**
+  \brief Reading 'true' literal.
+  \returns Token true.
+  */
   Token state_true() {
     const static char rue[] = "rue";
     for (auto i = 0; i < 3; ++i) {
@@ -297,6 +415,10 @@ class ReonLexer {
     return Token{"true"};
   }
 
+  /**
+  \brief Reading 'false' literal.
+  \returns Token false.
+  */
   Token state_false() {
     const static char alse[] = "alse";
     for (auto i = 0; i < 4; ++i) {
@@ -309,6 +431,10 @@ class ReonLexer {
     return Token{"false"};
   }
 
+  /**
+  \brief Reading 'null' literal.
+  \returns Token null.
+  */
   Token state_null() {
     const static char ull[] = "ull";
     for (auto i = 0; i < 3; ++i) {
@@ -321,6 +447,10 @@ class ReonLexer {
     return Token{"null"};
   }
 
+  /**
+  \brief Checking for keywords in string.
+  \returns Token string or one of the keyword tokens.
+  */
   Token check_keywords() {  // TODO: all keywords
     auto &a = atr();
     // repetition operators
@@ -374,6 +504,10 @@ class ReonLexer {
     return Token{"string", a};
   }
 
+  /**
+  \brief Reading flags in keyword 'flag'.
+  \returns Token flag or token string.
+  */
   Token keyword_flag() {
     auto &a = atr();
     char c = a[0];
@@ -410,10 +544,16 @@ class ReonLexer {
     return Token{"agroup", a};
   }
 
+  /**
+  \brief Reads repeats in keyword 'repeat'.
+  \returns Token repeat, ngrepeat or string.
+  */
   Token keyword_repeat(const string &token) {
     // checks attribute
     enum class State { INIT, FIRST, SECOND, INVALID } state = State::INIT;
     auto &a = atr();
+    if (a.length() == 0)
+      return Token{"string", token + " " + a};
     if (a == "*" || a == "+" || a == "?")
       return Token{token, a};
     char c = a[0];
@@ -450,6 +590,9 @@ class ReonLexer {
   }
 
  public:
+  /**
+  \brief Sets stream if changed and gets a token.
+  */
   Token operator()(std::istream &is) {
     if (&is != assignedStream_)
       fill_buffer(is);
@@ -458,3 +601,4 @@ class ReonLexer {
 };
 
 #endif
+/*** End of file reon_lexical_analyzer.h ***/
