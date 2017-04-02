@@ -64,7 +64,9 @@ class ReonLexer {
   Sets new buffer size, resets read position, col and row positions.
   */
   void fill_buffer(std::istream &is) {
-    buffer_ = std::string(std::istreambuf_iterator<char>(is), {});
+    std::stringstream buf;
+    buf << is.rdbuf();
+    buffer_ = buf.str();
     size_ = buffer_.size();
     position_ = 0;
     assignedStream_ = &is;

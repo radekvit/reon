@@ -33,12 +33,16 @@ const TranslationGrammar reonGrammar{
     {
         // first derivation
         {"E"_nt, {"RE"_nt}, {"re = r\""_t, "RE"_nt, "\"\n"_t}},
+        // empty regular expression
         {"RE"_nt, {}},
+        // regular expression with some reon content
         {"RE"_nt, {"REFULL"_nt}},
+        // match empty string
+        {"REFULL"_nt, {"true"_t}, {"re"_t}},
         // don't match ever
-        {"REFULL"_nt, {"false"_t}, {"(?:.^)"_t}},
+        {"REFULL"_nt, {"false"_t}, {"(?!)"_t}},
         // don't match ever
-        {"REFULL"_nt, {"null"_t}, {"(?:.^)"_t}},
+        {"REFULL"_nt, {"null"_t}, {"(?!)"_t}},
         // string only RE
         {"REFULL"_nt, {"string"_t}, {"re"_t}, {{0}}},
         // append list
@@ -122,14 +126,14 @@ const TranslationGrammar reonGrammar{
         {"IfRef"_nt, {"number"_t}, {"nref"_t}, {{0}}},
         // identifier reference in if-then[-else]
         {"IfRef"_nt, {"string"_t}, {"ref"_t}, {{0}}},
-        // optional else
-        {"Else"_nt, {","_t, "else"_t, ":"_t, "RE"_nt}, {"|"_t, "RE"_nt}},
         // no else
         {"Else"_nt, {}},
-        // first element in append list
-        {"RE-listE"_nt, {"REFULL"_nt, "RE-list"_nt}},
+        // optional else
+        {"Else"_nt, {","_t, "else"_t, ":"_t, "RE"_nt}, {"|"_t, "RE"_nt}},
         // empty append list
         {"RE-listE"_nt, {}},
+        // first element in append list
+        {"RE-listE"_nt, {"REFULL"_nt, "RE-list"_nt}},
         // no more elements in append list
         {"RE-list"_nt, {}},
         // elements in append list

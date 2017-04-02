@@ -1,20 +1,19 @@
-APPNAME=reon
-INCLUDE=include
-LIBDIR = lib/ctf
+APPNAME=reon_test
+INCLUDE=../include
+LIBDIR = ../lib/ctf
 LIBINCLUDE = $(LIBDIR)/include
 LIBSRC = $(LIBDIR)/src
-SRC=src
+SRC=../src
 CXXFLAGS += -std=c++14 -Wall -Wextra -pedantic -I. -I $(INCLUDE) -I $(LIBINCLUDE)
 OBJ=obj
 $(shell mkdir -p $(OBJ))
 
-HEADERS=$(wildcard $(INCLUDE)/*.h)
-LIBHEADERS=$(wildcard $(LIBSRC)/*.h)
+HEADERS=$(wildcard $(SRC)/*.h) $(wildcard *.h)
 OBJFILES=$(patsubst $(SRC)/%.cpp,$(OBJ)/%.o,$(wildcard $(SRC)/*.cpp))
 
-.PHONY: all format clean debug build test pack doc run libbuild cleanall
+.PHONY: all format clean debug build test
 
-all: deploy
+all: debug
 
 build: $(APPNAME)
 
@@ -25,26 +24,20 @@ deploy: CXXFLAGS+=-O3 -DNDEBUG
 deploy: build
 
 $(APPNAME): $(OBJFILES)
-	$(CXX) $(CXXFLAGS) $(OBJFILES) -o $@ $(LDLIBS)
+	$(CXX) $(CXXFLAGS) $(LDLIBS) $^ -o $@
+
+$(OBJ)/main.o: main.cpp $(HEADERS) $(LIBHEADERS)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 $(OBJ)/%.o: $(SRC)/%.cpp $(HEADERS) $(LIBHEADERS)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:
-	-rm -rf $(OBJFILES) $(APPNAME) doc/html
+	-rm -rf $(OBJ) $(APPNAME)
 
 format:
-	clang-format -style=file -i $(SRC)/*.cpp $(INCLUDE)/*.h
+	clang-format -style=file -i ./*.cpp ./*.h
 
+test: debug
 test:
-	make -C test test
-
-pack: all
-pack:
-	zip ctf.zip include/*.h $(APPNAME)
-
-doc:
-	make -C doc
-
-run: all
-	./reon
+	./$(APPNAME)
