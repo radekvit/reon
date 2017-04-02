@@ -547,7 +547,7 @@ class ReonLexer {
     if (firstUsed >= 4 || (phase == 0 && firstUsed == 0) ||
         (phase == 1 && (secondUsed == 0 || secondUsed >= 4)))
       return Token{"string", "flag " + a};
-    return Token{"agroup", a};
+    return Token{"flag", a};
   }
 
   /**

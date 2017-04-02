@@ -13,7 +13,7 @@
 	{"reference": "pejsek"},
 	{"reference": 1},
 	{"lookahead": "z"},
-	{"nlookahead": null},
+	{"nlookahead": "abc"},
 	{"lookbehind": {"alternatives": ["a", {"repeat 5": "xyz"}]}},
 	{"nlookbehind": "z"},
 	{"if": 2, "then": "xyz"},
