@@ -35,7 +35,7 @@ class TestCase {
     translation_.run(in, out);
 
     out_ = out.str();
-    // compare output to expected results
+
     return out_ == expected_;
   }
 

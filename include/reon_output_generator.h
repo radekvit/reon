@@ -238,6 +238,7 @@ class ReonOutput {
         case ']':
         case '^':
           finalSet += "\\" + string{c};
+          break;
         default:
           finalSet += string{c};
       }  // switch

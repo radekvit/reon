@@ -253,6 +253,10 @@ class ReonLexer {
               append(static_cast<char>(result & 0xFF));
               break;
             }  // case 'u'
+            case '"':
+            case '\\':
+              append(c);
+              break;
             default:
               append('\\');
               append();

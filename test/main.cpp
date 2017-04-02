@@ -7,10 +7,9 @@
 
 using reon_test::TestCase;
 
-
 int main() {
   Translation reon2Py{ReonLexer{}, "ll", reonGrammar, ReonOutput{}};
-  
+
   vector<TestCase> tests{
       {"1: ipv4", reon2Py, "in/test01_in", "in/test01_expected"},
       {"2: all features", reon2Py, "in/test02_in", "in/test02_expected"},
