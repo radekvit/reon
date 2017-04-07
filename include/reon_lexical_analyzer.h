@@ -16,7 +16,7 @@
 \brief Recursive descent lexical analyzer for reon. Callable class.
 
 Buffers all of the stream input. Resets on input stream change and on returning
-Symbol::EOI.
+Symbol::eof().
 */
 class ReonLexer {
  public:
@@ -141,12 +141,12 @@ class ReonLexer {
   void reset() { assignedStream_ = nullptr; }
 
   /**
-  \brief Returns Symbol::EOI(), resets lexical analyzer.
-  \returns Symbol::EOI().
+  \brief Returns Symbol::eof(), resets lexical analyzer.
+  \returns Symbol::eof().
   */
-  Symbol EOI() {
+  Symbol eof() {
     reset();
-    return Symbol::EOI();
+    return Symbol::eof();
   }
 
   /**
@@ -171,7 +171,7 @@ class ReonLexer {
     clear();
     do {
       if (!read())
-        return EOI();
+        return eof();
     } while (std::isspace(c));
     /* : is hadled after string because of special identifiers */
     switch (c) {
@@ -204,7 +204,7 @@ class ReonLexer {
     }  // switch
     throw_exception("No token beginning with " + s(c) + ".");
     // to shut compiler up
-    return Symbol::EOI();
+    return Symbol::eof();
   }
 
   /**
@@ -309,7 +309,7 @@ class ReonLexer {
     }
     throw_exception("Unexpected " + s(c) + " when reading a number.");
     // to shut compiler up
-    return Symbol::EOI();
+    return Symbol::eof();
   }
 
   /**
