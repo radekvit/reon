@@ -188,13 +188,13 @@ class ReonOutput {
               out << '\\';
               break;
             default:
-              throw SemanticError("Unknown escaped sequence \\" + string{c} +
-                                  ".");
+              throw SemanticError("Unknown escaped sequence \\" +
+                                  std::string{c} + ".");
           }
         }
         if (c != '.' && c != '^' && c != '$' && c != '\\') {
           throw SemanticError(
-              "Character " + string{c} +
+              "Character " + std::string{c} +
               " cannot be escaped in a string character sequence.");
         }
         if (c == '\\')

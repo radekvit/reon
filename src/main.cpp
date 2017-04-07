@@ -69,7 +69,7 @@ void run_with_arguments(int argc, char **argv) {
   bool inputDefined = false;
   bool outputDefined = false;
   for (int i = 1; i < argc; i++) {
-    string arg{argv[i]};
+    std::string arg{argv[i]};
     if (arg == "-i") {
       if (inputDefined) {
         throw std::invalid_argument("Multiple input definitions.");
@@ -80,8 +80,8 @@ void run_with_arguments(int argc, char **argv) {
       }
       fileIn.open(argv[i]);
       if (fileIn.fail()) {
-        throw std::invalid_argument("Could not open file " + string{argv[i]} +
-                                    " for input.");
+        throw std::invalid_argument("Could not open file " +
+                                    std::string{argv[i]} + " for input.");
       }
       input = &fileIn;
     } else if (arg == "-o") {
@@ -94,8 +94,8 @@ void run_with_arguments(int argc, char **argv) {
       }
       fileOut.open(argv[i]);
       if (fileOut.fail()) {
-        throw std::invalid_argument("Could not open file " + string{argv[i]} +
-                                    " for output.");
+        throw std::invalid_argument("Could not open file " +
+                                    std::string{argv[i]} + " for output.");
       }
       output = &fileOut;
     } else if (arg == "-h" || arg == "--help") {
