@@ -392,13 +392,13 @@ class ReonOutput {
 
  public:
   /**
-  \brief Outputs the incoming symbol. Resets on receiving Symbol::EOI().
+  \brief Outputs the incoming symbol. Resets on receiving Symbol::eof().
   Performs semantic checks.
   \param[out] out Output stream.
   \param[in] s Incoming symbol.
   */
   void operator()(std::ostream &out, const Symbol &s) {
-    if (s == Symbol::EOI()) {
+    if (s == Symbol::eof()) {
       clear_all();
       return;
     }
