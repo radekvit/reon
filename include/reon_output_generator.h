@@ -6,7 +6,7 @@
 #ifndef REON_OUTPUT_GENERATOR
 #define REON_OUTPUT_GENERATOR
 
-#include <ctf.h>
+#include <ctf.hpp>
 
 #include <cctype>
 #include <cstdlib>

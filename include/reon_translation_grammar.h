@@ -6,7 +6,7 @@
 #ifndef REON_TRANSLATION_GRAMMAR
 #define REON_TRANSLATION_GRAMMAR
 
-#include <ctf.h>
+#include <ctf.hpp>
 
 extern const TranslationGrammar reonGrammar;
 

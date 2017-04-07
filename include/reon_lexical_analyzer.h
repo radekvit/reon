@@ -6,7 +6,7 @@
 #ifndef REON_LEXICAL_ANALYZER
 #define REON_LEXICAL_ANALYZER
 
-#include <ctf.h>
+#include <ctf.hpp>
 #include <cctype>
 #include <iterator>
 #include <sstream>
