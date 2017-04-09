@@ -7,6 +7,10 @@
 
 using reon_test::TestCase;
 
+namespace globals {
+  string varname = "re";
+} //namespace globals
+
 int main() {
   Translation reon2Py{ReonLexer{}, "ll", reonGrammar, ReonOutput{}};
 

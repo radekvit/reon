@@ -20,6 +20,10 @@ const int SYNTAX_ERROR = 6;
 const int SEMANTIC_ERROR = 7;
 const int UNKNOWN_EXCEPTION = 666;
 
+namespace globals {
+  string varname = "re";
+} //namespace globals
+
 void print_help();
 
 void translation(std::istream &input, std::ostream &output) {
@@ -68,6 +72,7 @@ void run_with_arguments(int argc, char **argv) {
 
   bool inputDefined = false;
   bool outputDefined = false;
+  bool varDefined = false;
   for (int i = 1; i < argc; i++) {
     std::string arg{argv[i]};
     if (arg == "-i") {
@@ -98,6 +103,23 @@ void run_with_arguments(int argc, char **argv) {
                                     std::string{argv[i]} + " for output.");
       }
       output = &fileOut;
+    } else if (arg == "-v") {
+      if (varDefined) {
+        throw std::invalid_argument("Multiple variable name definitions.");
+      }
+      varDefined = true;
+      if (++i == argc) {
+        throw std::invalid_argument("No variable name given after -v.");
+      }
+      globals::varname = string(argv[i]);
+      if(globals::varname.size() == 0) {
+        throw std::invalid_argument("Variable name must be at least 1 character long.");
+      }
+      for (char c: globals::varname) {
+        if(!std::isalpha(c)) {
+          throw std::invalid_argument("Variable name must contain only alphabetical characters.");
+        }
+      }
     } else if (arg == "-h" || arg == "--help") {
       print_help();
       return;
@@ -112,9 +134,10 @@ void run_with_arguments(int argc, char **argv) {
 
 void print_help() {
   cout << "reon - translates reon to Python 3 RE.\n\n";
-  cout << "usage: ./reon [-i input] [-o output]\n";
+  cout << "usage: ./reon [-i input] [-o output] [-v variable]\n";
   cout << "\n";
   cout << "-i input: Sets input to the input file. Default input is stdin.\n";
   cout << "-o output: Sets output to the output file. Default output is "
           "stdout.\n";
+  cout << "-v variable: Sets the variable name set in the input. Default variable name is \"re\".\n";
 }
