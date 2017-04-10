@@ -21,14 +21,16 @@ const int SEMANTIC_ERROR = 7;
 const int UNKNOWN_EXCEPTION = 666;
 
 namespace globals {
-  string varname = "re";
-} //namespace globals
+string varname = "re";
+}  // namespace globals
 
 void print_help();
 
 void translation(std::istream &input, std::ostream &output) {
   // reon translation unit, LL table driven translation
-  Translation t{ReonLexer{}, "ll", reonGrammar, ReonOutput{}};
+  ReonLexer analyzer{};
+  ReonOutput generator{};
+  Translation t{analyzer, "ll", reonGrammar, generator};
   t.run(input, output);
 }
 
@@ -112,12 +114,14 @@ void run_with_arguments(int argc, char **argv) {
         throw std::invalid_argument("No variable name given after -v.");
       }
       globals::varname = string(argv[i]);
-      if(globals::varname.size() == 0) {
-        throw std::invalid_argument("Variable name must be at least 1 character long.");
+      if (globals::varname.size() == 0) {
+        throw std::invalid_argument(
+            "Variable name must be at least 1 character long.");
       }
-      for (char c: globals::varname) {
-        if(!std::isalpha(c)) {
-          throw std::invalid_argument("Variable name must contain only alphabetical characters.");
+      for (char c : globals::varname) {
+        if (!std::isalpha(c)) {
+          throw std::invalid_argument(
+              "Variable name must contain only alphabetical characters.");
         }
       }
     } else if (arg == "-h" || arg == "--help") {
@@ -139,5 +143,6 @@ void print_help() {
   cout << "-i input: Sets input to the input file. Default input is stdin.\n";
   cout << "-o output: Sets output to the output file. Default output is "
           "stdout.\n";
-  cout << "-v variable: Sets the variable name set in the input. Default variable name is \"re\".\n";
+  cout << "-v variable: Sets the variable name set in the input. Default "
+          "variable name is \"re\".\n";
 }

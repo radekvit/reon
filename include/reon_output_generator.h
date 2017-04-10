@@ -14,7 +14,7 @@
 #include <set>
 
 namespace globals {
-  extern string varname;
+extern string varname;
 }
 
 /*
@@ -59,26 +59,27 @@ class ReonOutput {
   const std::map<Symbol, std::function<void(std::ostream &, const Symbol &)>>
       symbolMap_{
           {"re"_t, std::bind(&ReonOutput::re, this, std::placeholders::_1,
-                           std::placeholders::_2)},
+                             std::placeholders::_2)},
           {"set"_t, std::bind(&ReonOutput::set, this, std::placeholders::_1,
-                            std::placeholders::_2)},
-          {"ref"_t, std::bind(&ReonOutput::ref, this, std::placeholders::_1,
-                            std::placeholders::_2)},
-          {"nref"_t, std::bind(&ReonOutput::nref, this, std::placeholders::_1,
-                             std::placeholders::_2)},
-          {"comment"_t, std::bind(&ReonOutput::comment, this,
-                                std::placeholders::_1, std::placeholders::_2)},
-          {"repeat"_t, std::bind(&ReonOutput::repeat, this, std::placeholders::_1,
-                               std::placeholders::_2)},
-          {"flags"_t, std::bind(&ReonOutput::flags, this, std::placeholders::_1,
                               std::placeholders::_2)},
+          {"ref"_t, std::bind(&ReonOutput::ref, this, std::placeholders::_1,
+                              std::placeholders::_2)},
+          {"nref"_t, std::bind(&ReonOutput::nref, this, std::placeholders::_1,
+                               std::placeholders::_2)},
+          {"comment"_t,
+           std::bind(&ReonOutput::comment, this, std::placeholders::_1,
+                     std::placeholders::_2)},
+          {"repeat"_t, std::bind(&ReonOutput::repeat, this,
+                                 std::placeholders::_1, std::placeholders::_2)},
+          {"flags"_t, std::bind(&ReonOutput::flags, this, std::placeholders::_1,
+                                std::placeholders::_2)},
           {"flag"_t, std::bind(&ReonOutput::flag, this, std::placeholders::_1,
-                             std::placeholders::_2)},
+                               std::placeholders::_2)},
           {"named group"_t,
            std::bind(&ReonOutput::named_group, this, std::placeholders::_1,
                      std::placeholders::_2)},
           {"group"_s, std::bind(&ReonOutput::group, this, std::placeholders::_1,
-                              std::placeholders::_2)},
+                                std::placeholders::_2)},
           {"fixed_length_check"_s,
            std::bind(&ReonOutput::add_fixed_length_check, this,
                      std::placeholders::_1, std::placeholders::_2)},
@@ -87,7 +88,7 @@ class ReonOutput {
                      std::placeholders::_2)},
           {"variable"_s,
            std::bind(&ReonOutput::variable, this, std::placeholders::_1,
-                     std::placeholders::_2)},    
+                     std::placeholders::_2)},
       };
 
   /**
@@ -392,9 +393,7 @@ class ReonOutput {
   /**
   \brief Outputs the set variable name.
   */
-  void variable(std::ostream &out, const Symbol &) {
-    out << globals::varname;
-  }
+  void variable(std::ostream &out, const Symbol &) { out << globals::varname; }
 
   /**
   \brief Outputs a terminal's name.
