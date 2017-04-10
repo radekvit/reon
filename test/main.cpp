@@ -12,7 +12,9 @@ namespace globals {
 } //namespace globals
 
 int main() {
-  Translation reon2Py{ReonLexer{}, "ll", reonGrammar, ReonOutput{}};
+  ReonLexer analyzer{};
+  ReonOutput generator{};
+  Translation reon2Py{analyzer, "ll", reonGrammar, generator};
 
   vector<TestCase> tests{
       {"1: ipv4", reon2Py, "in/test01_in", "in/test01_expected"},
