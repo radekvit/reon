@@ -18,18 +18,22 @@ extern string varname;
 }
 
 /*
-Output terminals with meaning:
-        re          -   sequence of characters
-        set         -   set characters
-        ref         -   name reference
-        nref        -   numerical reference
-        comment     -   comment body
-        repeat      -   repeat string: *, {m}, {-n},...
-        flags       -   aiLmsux
-        flag        -   ismx-ismx
-        named group -   group name
-        group       -   group definition for semantic analysis
+Output terminals with special meaning:
+  re          -   sequence of characters
+  set         -   set characters
+  ref         -   name reference
+  nref        -   numerical reference
+  comment     -   comment body
+  repeat      -   repeat string: *, {m}, {-n},...
+  named group -   group name
+
+Output special symbols:
+  group       -   group definition for semantic analysis
+  fixed_length_check  -   checks lookbehind length
+  end_check   -   pops one check
+  variable    -   Python variable with name set in namespace global
 */
+
 /**
 \brief Callable class for reon output generation and semantic checks.
 */
@@ -71,10 +75,6 @@ class ReonOutput {
                      std::placeholders::_2)},
           {"repeat"_t, std::bind(&ReonOutput::repeat, this,
                                  std::placeholders::_1, std::placeholders::_2)},
-          {"flags"_t, std::bind(&ReonOutput::flags, this, std::placeholders::_1,
-                                std::placeholders::_2)},
-          {"flag"_t, std::bind(&ReonOutput::flag, this, std::placeholders::_1,
-                               std::placeholders::_2)},
           {"named group"_t,
            std::bind(&ReonOutput::named_group, this, std::placeholders::_1,
                      std::placeholders::_2)},
@@ -324,39 +324,6 @@ class ReonOutput {
     }
     out << s.attribute();
     out << "}";
-  }
-  /**
-  \brief Outputs the 'flags' terminal. Checks if the flags given are available.
-  */
-  void flags(std::ostream &out, const Symbol &s) {
-    std::set<char> used{};
-    static const std::set<char> available{'a', 'i', 'L', 'm', 's', 'u', 'x'};
-    for (char c : s.attribute()) {
-      auto it = available.find(c);
-      if (it == available.end())
-        throw SemanticError("Unknown flag " + string{c} +
-                            "in 'flags' sequence.");
-      if (used.find(c) == used.end()) {
-        out << c;
-        used.insert(c);
-      }
-    }
-  }
-  /**
-  \brief Outputs the 'flag' terminal. Checks the flag sequence validity.
-  */
-  void flag(std::ostream &out, const Symbol &s) {
-    std::set<char> used{};
-    std::set<char> available{'i', 's', 'm', 'x', '-'};
-    for (char c : s.attribute()) {
-      auto it = available.find(c);
-      if (it == available.end())
-        throw SemanticError("Unknown flag " + string{c} +
-                            "in 'flag ismx-ismx' sequence.");
-      available.erase(it);
-      used.insert(c);
-      out << c;
-    }
   }
   /**
   \brief Outputs the 'named_group' terminal. Validates the group's name. Adds

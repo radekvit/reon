@@ -464,42 +464,34 @@ class ReonLexer {
       a.erase(0, 7);
       return keyword_repeat("repeat");
     }
-    if (!a.compare(0, 9, "ngrepeat ", 0, 9)) {
-      a.erase(0, 9);
-      return keyword_repeat("ngrepeat");
+    if (!a.compare(0, 18, "non-greedy repeat ", 0, 18)) {
+      a.erase(0, 18);
+      return keyword_repeat("non-greedy repeat");
     }
     if (a == "set")
       return Token{"set"};
-    if (a == "nset" || a == "negated set")
-      return Token{"nset"};
+    if (a == "!set" || a == "negated set")
+      return Token{"!set"};
     if (a == "alternatives")
       return Token{"alternatives"};
     if (a == "group")
       return Token{"group"};
-    if (a == "flags")
-      return Token{"flags"};
-    if (a == "agroup" || a == "non-capturing group")
-      return Token{"agroup"};
-    if (!a.compare(0, 5, "flag ", 0, 5)) {
-      a.erase(0, 5);
-      return keyword_flag();
-    }
     if (!a.compare(0, 6, "group ", 0, 6)) {
       a.erase(0, 6);
       return Token{"named group", a};
     }
-    if (a == "reference")
-      return Token{"reference"};
+    if (a == "match group")
+      return Token{"match group"};
     if (a == "comment")
       return Token{"comment"};
     if (a == "lookahead")
       return Token{"lookahead"};
-    if (a == "nlookahead" || a == "negative lookahead")
-      return Token{"nlookahead"};
+    if (a == "!lookahead" || a == "negative lookahead")
+      return Token{"!lookahead"};
     if (a == "lookbehind")
       return Token{"lookbehind"};
-    if (a == "nlookbehind" || a == "negative lookbehind")
-      return Token{"nlookbehind"};
+    if (a == "!lookbehind" || a == "negative lookbehind")
+      return Token{"!lookbehind"};
     if (a == "if")
       return Token{"if"};
     if (a == "then")
@@ -508,46 +500,6 @@ class ReonLexer {
       return Token{"else"};
     // no match
     return Token{"string", a};
-  }
-
-  /**
-  \brief Reading flags in keyword 'flag'.
-  \returns Token flag or token string.
-  */
-  Token keyword_flag() {
-    auto &a = atr();
-    char c = a[0];
-    int phase = 0;
-    int firstUsed = 0, secondUsed = 0;
-    for (uint_type i = 0; i < a.size(); ++i, c = a[i]) {
-      switch (c) {
-        case 'i':
-        case 's':
-        case 'm':
-        case 'x':
-          switch (phase) {
-            case 0:
-              firstUsed++;
-              break;
-            case 1:
-              secondUsed++;
-              break;
-            default:
-              return Token{"string", "flag " + a};
-          }  // switch
-          break;
-        case '-':
-          phase++;
-          break;
-        default:
-          return Token{"string", "flag " + a};
-
-      }  // switch
-    }    // for
-    if (firstUsed >= 4 || (phase == 0 && firstUsed == 0) ||
-        (phase == 1 && (secondUsed == 0 || secondUsed >= 4)))
-      return Token{"string", "flag " + a};
-    return Token{"flag", a};
   }
 
   /**
@@ -590,7 +542,7 @@ class ReonLexer {
     }    // for
     if (state == State::INVALID)
       return Token{"string", token + " " + a};
-    if (token == "ngrepeat" && state == State::FIRST)
+    if (token == "non-greedy repeat" && state == State::FIRST)
       return Token{"repeat", a};
     return Token{token, a};
   }

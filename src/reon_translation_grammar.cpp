@@ -7,18 +7,19 @@
 
 /*
 Output terminals with special meaning:
-        re          -   sequence of characters
-        set         -   set characters
-        ref         -   name reference
-        nref        -   numerical reference
-        comment     -   comment body
-        repeat      -   repeat string: *, {m}, {-n},...
-        flags       -   aiLmsux
-        flag        -   ismx-ismx
-        named group -   group name
-        group       -   group definition for semantic analysis
-        fixed_length_check  -   checks lookbehind length
-        end_check   -   pops one check
+  re          -   sequence of characters
+  set         -   set characters
+  ref         -   name reference
+  nref        -   numerical reference
+  comment     -   comment body
+  repeat      -   repeat string: *, {m}, {-n},...
+  named group -   group name
+
+Output special symbols:
+  group       -   group definition for semantic analysis
+  fixed_length_check  -   checks lookbehind length
+  end_check   -   pops one check
+  variable    -   Python variable with name set in namespace global
 */
 
 /**
@@ -56,7 +57,7 @@ const TranslationGrammar reonGrammar{
          {{3}, {}}},
         // non-greedy repeat object
         {"OBJ"_nt,
-         {"ngrepeat"_t, ":"_t, "RE"_nt},
+         {"non-greedy repeat"_t, ":"_t, "RE"_nt},
          {"(?:"_t, "RE"_nt, ")"_t, "repeat"_t, "?"_t},
          {{3}, {}}},
         // character set
@@ -66,7 +67,7 @@ const TranslationGrammar reonGrammar{
          {{}, {}, {1}}},
         // negated character set
         {"OBJ"_nt,
-         {"nset"_t, ":"_t, "string"_t},
+         {"!set"_t, ":"_t, "string"_t},
          {"[^"_t, "set"_t, "]"_t},
          {{}, {}, {1}}},
         // alternation list
@@ -77,25 +78,13 @@ const TranslationGrammar reonGrammar{
         {"OBJ"_nt,
          {"group"_t, ":"_t, "RE"_nt},
          {"("_t, "group"_s, "RE"_nt, ")"_t}},
-        // flags
-        {"OBJ"_nt,
-         {"flags"_t, ":"_t, "string"_t},
-         {"(?"_t, "flags"_t, ")"_t},
-         {{}, {}, {1}}},
-        // anonymous group
-        {"OBJ"_nt, {"agroup"_t, ":"_t, "RE"_nt}, {"(?:"_t, "RE"_nt, ")"_t}},
-        // anonymous group with local flags
-        {"OBJ"_nt,
-         {"flag"_t, ":"_t, "RE"_nt},
-         {"(?"_t, "flag"_t, ":"_t, "RE"_nt, ")"_t},
-         {{1}, {}}},
         // group with identifier
         {"OBJ"_nt,
          {"named group"_t, ":"_t, "RE"_nt},
          {"(?P<"_t, "named group"_t, ">"_t, "RE"_nt, ")"_t},
          {{1}, {}}},
         // reference
-        {"OBJ"_nt, {"reference"_t, ":"_t, "Ref"_nt}, {"Ref"_nt}},
+        {"OBJ"_nt, {"match group"_t, ":"_t, "Ref"_nt}, {"Ref"_nt}},
         // comment
         {"OBJ"_nt,
          {"comment"_t, ":"_t, "string"_t},
@@ -104,14 +93,14 @@ const TranslationGrammar reonGrammar{
         // lookahead
         {"OBJ"_nt, {"lookahead"_t, ":"_t, "RE"_nt}, {"(?="_t, "RE"_nt, ")"_t}},
         // negative lookahead
-        {"OBJ"_nt, {"nlookahead"_t, ":"_t, "RE"_nt}, {"(?!"_t, "RE"_nt, ")"_t}},
+        {"OBJ"_nt, {"!lookahead"_t, ":"_t, "RE"_nt}, {"(?!"_t, "RE"_nt, ")"_t}},
         // lookbehind
         {"OBJ"_nt,
          {"lookbehind"_t, ":"_t, "RE"_nt},
          {"(?<="_t, "fixed_length_check"_s, "RE"_nt, "end_check"_s, ")"_t}},
         // negative lookbehind
         {"OBJ"_nt,
-         {"nlookbehind"_t, ":"_t, "RE"_nt},
+         {"!lookbehind"_t, ":"_t, "RE"_nt},
          {"(?<!"_t, "RE"_nt, ")"_t}},
         // if-then[-else]
         {"OBJ"_nt,
