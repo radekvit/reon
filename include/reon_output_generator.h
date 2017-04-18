@@ -186,8 +186,6 @@ class ReonOutput {
             case 's':
             case 'S':
             case 't':
-            case 'u':
-            case 'U':
             case 'v':
             case 'w':
             case 'W':

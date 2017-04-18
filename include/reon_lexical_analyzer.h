@@ -235,24 +235,6 @@ class ReonLexer {
               append();
               break;
             */
-            case 'u': {  // converts to literal character
-              char temp[5] = {
-                  0,
-              };
-              for (auto i = 0; i < 4; ++i) {
-                if (!read())
-                  throw_exception("Unexpected EOF when reading \\u literal.");
-                if (!isxdigit(c))
-                  throw_exception(
-                      "Non hexa-digit character when reading \\u literal.");
-                temp[i] = c;
-              }  // for
-              int result = std::strtol(temp, nullptr, 16);
-              if (result > 0xFF)
-                append(static_cast<char>(result >> 8));
-              append(static_cast<char>(result & 0xFF));
-              break;
-            }  // case 'u'
             case '"':
             case '\\':
               append(c);
