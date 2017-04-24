@@ -11,7 +11,7 @@
 	{"match group": 1},
 	{"lookahead": "z"},
 	{"!lookahead": "abc"},
-	{"lookbehind": {"alternatives": ["a", {"repeat 5": "xyz"}]}},
+	{"lookbehind": {"repeat 5": "a"}},
 	{"!lookbehind": "z"},
 	{"if": 2, "then": "xyz"},
 	{"if": "pejsek", "then": "xxx", "else": "yyy"},

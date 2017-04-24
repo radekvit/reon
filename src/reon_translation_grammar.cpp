@@ -33,7 +33,7 @@ const TranslationGrammar reonGrammar{
     // rules
     {
         // first derivation
-        {"E"_nt, {"RE"_nt}, {"variable"_s, " = r\"(?m)"_t, "RE"_nt, "\"\n"_t}},
+        {"E"_nt, {"RE"_nt}, {"variable"_s, " = r\"(?ms)"_t, "RE"_nt, "\"\n"_t}},
         // empty regular expression
         {"RE"_nt, {}},
         // regular expression with some reon content
@@ -101,7 +101,7 @@ const TranslationGrammar reonGrammar{
         // negative lookbehind
         {"OBJ"_nt,
          {"!lookbehind"_t, ":"_t, "RE"_nt},
-         {"(?<!"_t, "RE"_nt, ")"_t}},
+         {"(?<!"_t, "fixed_length_check"_s, "RE"_nt, "end_check"_s, ")"_t}},
         // if-then[-else]
         {"OBJ"_nt,
          {"if"_t, ":"_t, "IfRef"_nt, ","_t, "then"_t, ":"_t, "RE"_nt,

@@ -57,39 +57,50 @@ class ReonOutput {
   vector<std::function<void(const Symbol &)>> semanticChecks_{};
 
   /**
+  \brief Object binding in symbolMap_
+   */
+  ReonOutput *cbinding_ = nullptr;
+
+  /**
   \brief Substitute for a string switch statement for invoking methods
   appropriate for incoming symbols.
   */
-  const std::map<Symbol, std::function<void(std::ostream &, const Symbol &)>>
-      symbolMap_{
-          {"re"_t, std::bind(&ReonOutput::re, this, std::placeholders::_1,
+  std::map<Symbol, std::function<void(std::ostream &, const Symbol &)>>
+      symbolMap_;
+
+  /**
+  \brief Binds callbacks to this object.
+  */
+  void bind_callbacks() {
+    symbolMap_ = std::map<Symbol,
+                          std::function<void(std::ostream &, const Symbol &)>>{
+        {"re"_t, std::bind(&ReonOutput::re, this, std::placeholders::_1,
+                           std::placeholders::_2)},
+        {"set"_t, std::bind(&ReonOutput::set, this, std::placeholders::_1,
+                            std::placeholders::_2)},
+        {"ref"_t, std::bind(&ReonOutput::ref, this, std::placeholders::_1,
+                            std::placeholders::_2)},
+        {"nref"_t, std::bind(&ReonOutput::nref, this, std::placeholders::_1,
                              std::placeholders::_2)},
-          {"set"_t, std::bind(&ReonOutput::set, this, std::placeholders::_1,
-                              std::placeholders::_2)},
-          {"ref"_t, std::bind(&ReonOutput::ref, this, std::placeholders::_1,
-                              std::placeholders::_2)},
-          {"nref"_t, std::bind(&ReonOutput::nref, this, std::placeholders::_1,
+        {"comment"_t, std::bind(&ReonOutput::comment, this,
+                                std::placeholders::_1, std::placeholders::_2)},
+        {"repeat"_t, std::bind(&ReonOutput::repeat, this, std::placeholders::_1,
                                std::placeholders::_2)},
-          {"comment"_t,
-           std::bind(&ReonOutput::comment, this, std::placeholders::_1,
-                     std::placeholders::_2)},
-          {"repeat"_t, std::bind(&ReonOutput::repeat, this,
+        {"named group"_t,
+         std::bind(&ReonOutput::named_group, this, std::placeholders::_1,
+                   std::placeholders::_2)},
+        {"group"_s, std::bind(&ReonOutput::group, this, std::placeholders::_1,
+                              std::placeholders::_2)},
+        {"fixed_length_check"_s,
+         std::bind(&ReonOutput::add_fixed_length_check, this,
+                   std::placeholders::_1, std::placeholders::_2)},
+        {"end_check"_s,
+         std::bind(&ReonOutput::end_check, this, std::placeholders::_1,
+                   std::placeholders::_2)},
+        {"variable"_s, std::bind(&ReonOutput::variable, this,
                                  std::placeholders::_1, std::placeholders::_2)},
-          {"named group"_t,
-           std::bind(&ReonOutput::named_group, this, std::placeholders::_1,
-                     std::placeholders::_2)},
-          {"group"_s, std::bind(&ReonOutput::group, this, std::placeholders::_1,
-                                std::placeholders::_2)},
-          {"fixed_length_check"_s,
-           std::bind(&ReonOutput::add_fixed_length_check, this,
-                     std::placeholders::_1, std::placeholders::_2)},
-          {"end_check"_s,
-           std::bind(&ReonOutput::end_check, this, std::placeholders::_1,
-                     std::placeholders::_2)},
-          {"variable"_s,
-           std::bind(&ReonOutput::variable, this, std::placeholders::_1,
-                     std::placeholders::_2)},
-      };
+    };
+  }
 
   /**
   \brief Resets the output generator.
@@ -112,9 +123,14 @@ class ReonOutput {
           throw SemanticError(
               "RE of non-constant length within a lookbehind assertion.");
       }
+
     } else if (symbol.name() == "ref" || symbol.name() == "nref") {
       throw SemanticError(
           "REON currently does not support group references within lookbehind "
+          "assertions.");
+    } else if (symbol.name() == "|") {
+      throw SemanticError(
+          "REON currently does not support alternatives within lookbehind "
           "assertions.");
     }
   }
@@ -243,6 +259,7 @@ class ReonOutput {
           break;
         case ']':
         case '^':
+        case '"':
           finalSet += "\\" + string{c};
           break;
         default:
@@ -376,6 +393,8 @@ class ReonOutput {
   \param[in] s Incoming symbol.
   */
   void operator()(std::ostream &out, const Symbol &s) {
+    if (this != cbinding_)
+      bind_callbacks();
     if (s == Symbol::eof()) {
       clear_all();
       return;
