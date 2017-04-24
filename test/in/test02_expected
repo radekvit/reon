@@ -1,1 +1,1 @@
-re = r"(?ms)(?#all features)(?:x)*(?:ya){7-}?[\^\][a-d][^\^\"xyz](?:a|b)(f)(?P<pejsek>p)(?P=pejsek)\1(?=z)(?!abc)(?<=(?:a){5})(?<!z)(?(2)xyz)(?(pejsek)xxx|yyy)"
+re = r"(?s)(?#all features)(?:x)*(?:ya){7-}?[\^\][a-d][^\^\"xyz](?:a|b)(f)(?P<pejsek>p)(?P=pejsek)\1(?=z)(?!abc)(?<=(?:a){5})(?<!z)(?(2)xyz)(?(pejsek)xxx|yyy)"

@@ -33,7 +33,7 @@ const TranslationGrammar reonGrammar{
     // rules
     {
         // first derivation
-        {"E"_nt, {"RE"_nt}, {"variable"_s, " = r\"(?ms)"_t, "RE"_nt, "\"\n"_t}},
+        {"E"_nt, {"RE"_nt}, {"variable"_s, " = r\"(?s)"_t, "RE"_nt, "\"\n"_t}},
         // empty regular expression
         {"RE"_nt, {}},
         // regular expression with some reon content
