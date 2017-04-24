@@ -10,6 +10,7 @@ $(shell mkdir -p $(OBJ))
 
 HEADERS=$(wildcard $(SRC)/*.h) $(wildcard *.h)
 OBJFILES=$(patsubst $(SRC)/%.cpp,$(OBJ)/%.o,$(wildcard $(SRC)/*.cpp))
+LIBHEADERS=$(wildcard $(LIBSRC)/*.hpp)
 
 .PHONY: all format clean debug build test
 
@@ -40,4 +41,4 @@ format:
 
 test: debug
 test:
-	./$(APPNAME) && make clean
+	./$(APPNAME) ; make clean

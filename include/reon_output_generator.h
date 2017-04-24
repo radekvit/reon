@@ -184,44 +184,39 @@ class ReonOutput {
         /* escaped character output */
       } else {
         lastEscaped = false;
-        if (std::isdigit(c)) {
-          throw SemanticError(
-              "Numbers cannot be escaped in string. To reference a group, an "
-              "explicit reference must be used.");
+        switch (c) {
+          case 'A':
+          case 'b':
+          case 'B':
+          case 'd':
+          case 'D':
+          case 'f':
+          case 'n':
+          case 'r':
+          case 's':
+          case 'S':
+          case 't':
+          case 'v':
+          case 'w':
+          case 'W':
+          case 'x':
+          case 'Z':
+          case '\\':
+            out << '\\' << c;
+            break;
+          case '.':
+            out << c;
+            break;
+          case '^':
+            out << "\\A";
+            break;
+          case '$':
+            out << "\\Z";
+            break;
+          default:
+            throw SemanticError("Unknown escaped sequence \\" + std::string{c} +
+                                ".");
         }
-        if (std::isalpha(c)) {
-          switch (c) {
-            case 'A':
-            case 'b':
-            case 'B':
-            case 'd':
-            case 'D':
-            case 'f':
-            case 'n':
-            case 'r':
-            case 's':
-            case 'S':
-            case 't':
-            case 'v':
-            case 'w':
-            case 'W':
-            case 'x':
-            case 'Z':
-              out << '\\';
-              break;
-            default:
-              throw SemanticError("Unknown escaped sequence \\" +
-                                  std::string{c} + ".");
-          }
-        }
-        if (c != '.' && c != '^' && c != '$' && c != '\\') {
-          throw SemanticError(
-              "Character " + std::string{c} +
-              " cannot be escaped in a string character sequence.");
-        }
-        if (c == '\\')
-          out << '\\';
-        out << c;
       }
     }
   }
