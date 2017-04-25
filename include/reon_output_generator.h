@@ -59,7 +59,7 @@ class ReonOutput {
   /**
   \brief Object binding in symbolMap_
    */
-  ReonOutput *cbinding_ = nullptr;
+  const ReonOutput *cbinding_ = nullptr;
 
   /**
   \brief Substitute for a string switch statement for invoking methods
@@ -72,6 +72,7 @@ class ReonOutput {
   \brief Binds callbacks to this object.
   */
   void bind_callbacks() {
+    cbinding_ = this;
     symbolMap_ = std::map<Symbol,
                           std::function<void(std::ostream &, const Symbol &)>>{
         {"re"_t, std::bind(&ReonOutput::re, this, std::placeholders::_1,
