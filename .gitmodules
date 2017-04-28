@@ -1,3 +1,3 @@
 [submodule "lib/ctf"]
 	path = lib/ctf
-	url = https://Radekvitr@bitbucket.org/RadekVit/ctf.git
+	url = git@github.com:radekvit/ctf.git
