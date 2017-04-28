@@ -36,7 +36,7 @@ clean:
 format:
 	clang-format -style=file -i $(SRC)/*.cpp $(INCLUDE)/*.h
 
-test:
+test: all
 	make -C test test
 
 pack: all

@@ -1,0 +1,17 @@
+[
+	"je tu ",
+	{ "repeat *":
+		{ "group":
+			{ "alternatives": [
+					"pejsek ",
+					"kocicka "
+				]
+			}
+		}
+	},
+	"posledni byl",
+	{ "repeat ?": "a" },
+	" ",
+	{ "match group": "pejsek"},
+	"."
+]

@@ -1,0 +1,7 @@
+[
+	{ "comment": "special characters in and out of sets" },
+	".?*+$^",
+	"\.\$\^\\",
+	{ "set": "$?^+*/\\][" },
+	"\A\b\Z"
+]

@@ -14,31 +14,8 @@ LIBHEADERS=$(wildcard $(LIBSRC)/*.hpp)
 
 .PHONY: all format clean debug build test
 
-all: debug
+all: test
 
-build: $(APPNAME)
-
-debug: CXXFLAGS+=-g -O0
-debug: build
-
-deploy: CXXFLAGS+=-O3 -DNDEBUG
-deploy: build
-
-$(APPNAME): $(OBJFILES)
-	$(CXX) $(CXXFLAGS) $(LDLIBS) $^ -o $@
-
-$(OBJ)/main.o: main.cpp $(HEADERS) $(LIBHEADERS)
-	$(CXX) $(CXXFLAGS) -c $< -o $@
-
-$(OBJ)/%.o: $(SRC)/%.cpp $(HEADERS) $(LIBHEADERS)
-	$(CXX) $(CXXFLAGS) -c $< -o $@
-
-clean:
-	-rm -rf $(OBJ) $(APPNAME)
-
-format:
-	clang-format -style=file -i ./*.cpp ./*.h
-
-test: debug
 test:
-	./$(APPNAME) ; make clean
+	chmod +x test.sh
+	./test.sh

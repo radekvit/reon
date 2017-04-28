@@ -236,9 +236,8 @@ class ReonLexer {
               break;
             */
             case '"':
-            case '\\':
               append(c);
-              break;
+              break;     
             default:
               append('\\');
               append();

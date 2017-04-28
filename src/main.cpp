@@ -12,12 +12,33 @@ using std::cout;
 using std::cerr;
 
 // error codes
+/**
+Runtime error return value.
+ */
 const int RUNTIME_ERROR = 1;
+/**
+Invalid argument was passed to the application or some function return value.
+ */
 const int INVALID_ARGUMENT = 2;
+/**
+An unspecified error within ctf return value.
+*/
 const int TRANSLATION_ENGINE_ERROR = 3;
+/**
+Lexical analysis error return value.
+*/
 const int LEXICAL_ERROR = 5;
+/**
+A syntax error return value.
+*/
 const int SYNTAX_ERROR = 6;
+/**
+A semantic error return value.
+ */
 const int SEMANTIC_ERROR = 7;
+/**
+Unknown error return value.
+ */
 const int UNKNOWN_EXCEPTION = 666;
 
 namespace globals {

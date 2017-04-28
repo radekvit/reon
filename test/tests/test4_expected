@@ -1,0 +1,1 @@
+re = r"(?s)(?#special characters in and out of sets)\.\?\*\+\$\^.\Z\A\\[$?\^+*/\\\][]\A\b\Z"

@@ -234,7 +234,7 @@ class ReonOutput {
     for (char c : s.attribute()) {
       if (escape) {
         escape = false;
-        finalSet += "\\c";
+        finalSet += "\\" + string{c};
         continue;
       }
       if (range) {
