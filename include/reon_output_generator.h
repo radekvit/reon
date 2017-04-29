@@ -200,7 +200,6 @@ class ReonOutput {
           case 'v':
           case 'w':
           case 'W':
-          case 'x':
           case 'Z':
           case '\\':
             out << '\\' << c;
