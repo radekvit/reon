@@ -398,7 +398,7 @@ class ReonOutput {
       check(s);
     }
     // runs name specific method
-    auto it = symbolMap_.find(s.name());
+    auto it = symbolMap_.find(s);
     if (it == symbolMap_.end())
       return symbol(out, s);
     return it->second(out, s);
