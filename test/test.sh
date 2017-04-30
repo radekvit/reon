@@ -93,4 +93,4 @@ done
 if [ $retval -ne 0 ] ; then
 	echo "Tests failed."
 fi
-return $sretval
+exit $sretval
