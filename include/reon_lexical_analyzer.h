@@ -214,14 +214,16 @@ class ReonLexer {
   Token state_string() {
     while (1) {
       if (!read())
-        throw_exception("Unexpected EOF when reading string.");
+        throw_exception("Unexpected EOF when reading a REON string.");
+      if(c <= 0x1F)
+        throw_exception("Control characters are forbidden in a REON string.");
       switch (c) {
         case '"':
           // may return keywords if there is a : after
           return state_string_end();
         case '\\': {
           if (!read())
-            throw_exception("Unexpected EOF when reading string.");
+            throw_exception("Unexpected EOF when reading a REON string.");
           switch (c) {
             /* Allow all characters to be escaped
             case '"':
