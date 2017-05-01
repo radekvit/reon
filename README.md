@@ -24,9 +24,12 @@ A regular expression RE is one of the following:
    * `{ "if": X, "then": RE1, "else": RE2}` - If a group with "name" or number `X` was matched, this will match `RE1`, and if not will match `RE2`. The else clause is optional.
 
 ## <a name="special"></a>Special characters in RE strings
-There are a few characters that, when escaped with `\`, have a special meaning.
+There are a few characters in expression strings that, when escaped with `\`, have a special meaning. This is an overview of the important escaped characters.
 
  * `\\` matches the character `\`
+ * `\"` matches the character `"`
+ * `\t` matches the tab character
+ * `\n` matches the line break character
  * `\^`, `\A` matches the beginning of the string
  * `\$`, `\Z` matches the end of the string
  * `\.` matches any character
