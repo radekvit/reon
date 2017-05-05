@@ -286,6 +286,8 @@ class ReonOutput {
           "Only positive integers are permitted as references.");
     if (static_cast<uint_type>(x) > numberGroups_)
       throw SemanticError("No group with number " + s.attribute() + ".");
+    if (x > 99)
+      throw SemanticError("Python supports numbered references of groups only up to group 99.");
 
     out << s.attribute();
   }
