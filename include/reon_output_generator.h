@@ -382,16 +382,7 @@ class ReonOutput {
     out << s.name();
   }
 
- public:
-  /**
-  \brief Outputs the incoming symbol. Resets on receiving Symbol::eof().
-  Performs semantic checks.
-  \param[out] out Output stream.
-  \param[in] s Incoming symbol.
-  */
-  void operator()(std::ostream &out, const Symbol &s) {
-    if (this != cbinding_)
-      bind_callbacks();
+  void single_terminal(std::ostream &out, const Symbol &s) {
     if (s == Symbol::eof()) {
       clear_all();
       return;
@@ -404,6 +395,21 @@ class ReonOutput {
     if (it == symbolMap_.end())
       return symbol(out, s);
     return it->second(out, s);
+  }
+
+ public:
+  /**
+  \brief Outputs the incoming symbol. Resets on receiving Symbol::eof().
+  Performs semantic checks.
+  \param[out] out Output stream.
+  \param[in] s Incoming symbol.
+  */
+  void operator()(std::ostream &out, const tstack<Symbol> &terminals) {
+    if (this != cbinding_)
+      bind_callbacks();
+    for (auto &s: terminals) {
+      single_terminal(out, s);
+    }
   }
 };
 
