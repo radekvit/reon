@@ -531,7 +531,7 @@ class ReonLexer : public LexicalAnalyzer {
   }
 
  public:
-  virtual void set_stream(std::istream &s) noexcept {
+  virtual void set_stream(std::istream &s, const string &) noexcept {
     LexicalAnalyzer::set_stream(s);
     fill_buffer(s);
   }
