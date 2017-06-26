@@ -37,11 +37,12 @@ Output special symbols:
 /**
 \brief Callable class for reon output generation and semantic checks.
 */
-class ReonOutput {
+class ReonOutput: public OutputGenerator {
  public:
   using uint_type = size_t;
 
  protected:
+  string errorString_;
   /**
   \brief Set of known group names.
   */
@@ -287,7 +288,8 @@ class ReonOutput {
     if (static_cast<uint_type>(x) > numberGroups_)
       throw SemanticError("No group with number " + s.attribute() + ".");
     if (x > 99)
-      throw SemanticError("Python supports numbered references of groups only up to group 99.");
+      throw SemanticError(
+          "Python supports numbered references of groups only up to group 99.");
 
     out << s.attribute();
   }
@@ -404,13 +406,21 @@ class ReonOutput {
   \param[out] out Output stream.
   \param[in] s Incoming symbol.
   */
-  void operator()(std::ostream &out, const tstack<Symbol> &terminals) {
+  virtual void output(const tstack<Symbol> &terminals) {
     if (this != cbinding_)
       bind_callbacks();
-    for (auto &s: terminals) {
-      single_terminal(out, s);
+    try {
+      for (auto &s : terminals) {
+        single_terminal(*os_, s);
+      }
+    } catch (SemanticError &se) {
+      errorFlag_ = true;
+      errorString_ += string(se.what()) + "\n";
+      return;
     }
   }
+
+  virtual string error_message() { return errorString_; }
 };
 
 #endif

@@ -49,9 +49,7 @@ void print_help();
 
 void translation(std::istream &input, std::ostream &output) {
   // reon translation unit, LL table driven translation
-  ReonLexer analyzer{};
-  ReonOutput generator{};
-  Translation t{analyzer, "ll", reonGrammar, generator};
+  Translation t{std::make_unique<ReonLexer>(), "ll", reonGrammar, std::make_unique<ReonOutput>()};
   t.run(input, output);
 }
 
@@ -61,11 +59,8 @@ void run_with_arguments(int argc, char **argv);
 int main(int argc, char **argv) {
   try {
     run_with_arguments(argc, argv);
-  } catch (LexicalError &le) {
-    cerr << "\nLexical Error: " << le.what() << "\n";
-    return LEXICAL_ERROR;
-  } catch (SyntaxError &se) {
-    cerr << "\nSyntax Error: " << se.what() << "\n";
+  } catch (TranslationError &le) {
+    cerr << "\nTranslation error:\n" << le.what();
     return SYNTAX_ERROR;
   } catch (SemanticError &se) {
     cerr << "\nSemantic Error: " << se.what() << "\n";

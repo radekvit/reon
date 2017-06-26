@@ -18,10 +18,11 @@
 Buffers all of the stream input. Resets on input stream change and on returning
 Symbol::eof().
 */
-class ReonLexer {
+class ReonLexer : public LexicalAnalyzer {
  public:
   using uint_type = size_t;
-
+ protected:
+  std::string errorString_;
   /**
   \brief Stream that is read from.
   */
@@ -69,7 +70,6 @@ class ReonLexer {
     buffer_ = buf.str();
     size_ = buffer_.size();
     position_ = 0;
-    assignedStream_ = &is;
     col_ = 1;
     row_ = 1;
   }
@@ -153,8 +153,8 @@ class ReonLexer {
   \brief Throws exception with given message and adds row and col information.
   */
   void throw_exception(const string &msg) {
-    throw LexicalError("Lexical error on row " + std::to_string(row_) +
-                       ", col " + std::to_string(col_) + ": " + msg);
+    throw TranslationError("Lexical error on row " + std::to_string(row_) +
+                           ", col " + std::to_string(col_) + ": " + msg);
   }
 
   /**
@@ -215,7 +215,7 @@ class ReonLexer {
     while (1) {
       if (!read())
         throw_exception("Unexpected EOF when reading a REON string.");
-      if(c <= 0x1F)
+      if (c <= 0x1F)
         throw_exception("Control characters are forbidden in a REON string.");
       switch (c) {
         case '"':
@@ -239,7 +239,7 @@ class ReonLexer {
             */
             case '"':
               append(c);
-              break;     
+              break;
             default:
               append('\\');
               append();
@@ -261,7 +261,7 @@ class ReonLexer {
   Token state_string_end() {
     do {
       if (!read())
-        return Token{"string", atr()};
+        return Terminal("string", atr());
     } while (std::isspace(c));
 
     // only checking following character, next token begins with it
@@ -271,7 +271,7 @@ class ReonLexer {
       case ':':
         return check_keywords();
       default:
-        return Token{"string", {atr()}};
+        return Terminal("string", {atr()});
     }
   }
 
@@ -301,14 +301,14 @@ class ReonLexer {
   */
   Token state_number_zero() {
     if (!read())
-      return Token{"number", atr()};
+      return Terminal("number", atr());
     switch (c) {
       case '.':
         append();
         return state_number_dec();
       default:
         roll_back(1);
-        return Token{"number", atr()};
+        return Terminal("number", atr());
     }
   }
 
@@ -319,7 +319,7 @@ class ReonLexer {
   Token state_number() {
     while (1) {
       if (!read())
-        return Token{"number", atr()};
+        return Terminal("number", atr());
       switch (c) {
         case '.':
           append();
@@ -331,7 +331,7 @@ class ReonLexer {
         default:
           if (!std::isdigit(c)) {
             roll_back(1);
-            return Token{"number", atr()};
+            return Terminal("number", atr());
           } else {
             append();
           }
@@ -352,7 +352,7 @@ class ReonLexer {
     append();
     while (1) {
       if (!read())
-        return Token{"number", atr()};
+        return Terminal("number", atr());
       switch (c) {
         case 'e':
         case 'E':
@@ -361,7 +361,7 @@ class ReonLexer {
         default:
           if (!std::isdigit(c)) {
             roll_back(1);
-            return Token{"number", atr()};
+            return Terminal("number", atr());
           }
           append();
       }  // switch
@@ -379,10 +379,10 @@ class ReonLexer {
       throw_exception("Unexpected " + s(c) + " after e when reading number.");
     while (1) {
       if (!read())
-        return Token{"number", atr()};
+        return Terminal("number", atr());
       if (!std::isdigit(c)) {
         roll_back(1);
-        return Token{"number", atr()};
+        return Terminal("number", atr());
       }  // if
       append();
     }  // while 1
@@ -401,7 +401,7 @@ class ReonLexer {
         throw_exception("Unexpected " + s(c) + " when reading 'true'.");
       }
     }
-    return Token{"true"};
+    return Terminal("true");
   }
 
   /**
@@ -417,7 +417,7 @@ class ReonLexer {
         throw_exception("Unexpected " + s(c) + " when reading 'false'.");
       }
     }
-    return Token{"false"};
+    return Terminal("false");
   }
 
   /**
@@ -433,7 +433,7 @@ class ReonLexer {
         throw_exception("Unexpected " + s(c) + " when reading 'null'.");
       }
     }
-    return Token{"null"};
+    return Terminal("null");
   }
 
   /**
@@ -452,37 +452,37 @@ class ReonLexer {
       return keyword_repeat("non-greedy repeat");
     }
     if (a == "set")
-      return Token{"set"};
+      return Terminal("set");
     if (a == "!set" || a == "negated set")
-      return Token{"!set"};
+      return Terminal("!set");
     if (a == "alternatives")
-      return Token{"alternatives"};
+      return Terminal("alternatives");
     if (a == "group")
-      return Token{"group"};
+      return Terminal("group");
     if (!a.compare(0, 6, "group ", 0, 6)) {
       a.erase(0, 6);
-      return Token{"named group", a};
+      return Terminal("named group", a);
     }
     if (a == "match group")
-      return Token{"match group"};
+      return Terminal("match group");
     if (a == "comment")
-      return Token{"comment"};
+      return Terminal("comment");
     if (a == "lookahead")
-      return Token{"lookahead"};
+      return Terminal("lookahead");
     if (a == "!lookahead" || a == "negative lookahead")
-      return Token{"!lookahead"};
+      return Terminal("!lookahead");
     if (a == "lookbehind")
-      return Token{"lookbehind"};
+      return Terminal("lookbehind");
     if (a == "!lookbehind" || a == "negative lookbehind")
-      return Token{"!lookbehind"};
+      return Terminal("!lookbehind");
     if (a == "if")
-      return Token{"if"};
+      return Terminal("if");
     if (a == "then")
-      return Token{"then"};
+      return Terminal("then");
     if (a == "else")
-      return Token{"else"};
+      return Terminal("else");
     // no match
-    return Token{"string", a};
+    return Terminal("string", a);
   }
 
   /**
@@ -494,9 +494,9 @@ class ReonLexer {
     enum class State { INIT, FIRST, SECOND, INVALID } state = State::INIT;
     auto &a = atr();
     if (a.length() == 0)
-      return Token{"string", token + " " + a};
+      return Terminal("string", token + " " + a);
     if (a == "*" || a == "+" || a == "?")
-      return Token{token, a};
+      return Terminal(token, a);
     char c = a[0];
     for (uint_type i = 0; i < a.size(); ++i, c = a[i]) {
       switch (state) {
@@ -524,20 +524,29 @@ class ReonLexer {
       }  // switch
     }    // for
     if (state == State::INVALID)
-      return Token{"string", token + " " + a};
+      return Terminal("string", token + " " + a);
     if (token == "non-greedy repeat" && state == State::FIRST)
-      return Token{"repeat", a};
-    return Token{token, a};
+      return Terminal("repeat", a);
+    return Terminal(token, a);
   }
 
  public:
+  virtual void set_stream(std::istream &s) noexcept {
+    LexicalAnalyzer::set_stream(s);
+    fill_buffer(s);
+  }
+  virtual string error_message() { return errorString_; }
   /**
   \brief Sets stream if changed and gets a token.
   */
-  Token operator()(std::istream &is) {
-    if (&is != assignedStream_)
-      fill_buffer(is);
-    return state_init();
+  Token get_token() {
+    try {
+      return state_init();
+    } catch (TranslationError &te) {
+      errorFlag_ = true;
+      errorString_ += string{te.what()} + "\n";
+      return Symbol::eof();
+    }
   }
 };
 
